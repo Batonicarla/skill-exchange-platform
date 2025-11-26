@@ -1,0 +1,124 @@
+.home-page {
+  min-height: calc(100vh - 200px);
+}
+
+.hero-section {
+  background: radial-gradient(circle at top, var(--color-hero-gradient-start), var(--color-hero-gradient-end));
+  color: var(--color-nav-text);
+  padding: 90px 0;
+  text-align: center;
+}
+
+.hero-section h1 {
+  font-size: clamp(2.5rem, 4vw, 4rem);
+  margin-bottom: 20px;
+  letter-spacing: 1px;
+}
+
+.hero-subtitle {
+  font-size: 1.2rem;
+  margin-bottom: 40px;
+  opacity: 0.85;
+  max-width: 640px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.hero-actions {
+  display: flex;
+  gap: 16px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.btn-large {
+  padding: 15px 32px;
+  font-size: 18px;
+  border-radius: 999px;
+}
+
+.features-section {
+  padding: 70px 0;
+  background: var(--color-surface);
+}
+
+.features-section h2 {
+  text-align: center;
+  margin-bottom: 50px;
+  color: var(--color-text);
+  font-size: 32px;
+}
+
+.features-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 30px;
+}
+
+.feature-card {
+  text-align: center;
+  padding: 30px;
+  border-radius: 20px;
+  background: var(--color-surface-alt);
+  border: 1px solid var(--color-border);
+}
+
+.feature-card h3 {
+  color: var(--color-primary);
+  margin-bottom: 15px;
+  font-size: 20px;
+}
+
+.feature-card p {
+  color: var(--color-text-muted);
+  line-height: 1.6;
+}
+
+.benefits-section {
+  padding: 70px 0;
+  background: var(--color-background);
+}
+
+.benefits-section h2 {
+  text-align: center;
+  margin-bottom: 40px;
+  color: var(--color-text);
+}
+
+.benefits-list {
+  max-width: 600px;
+  margin: 0 auto;
+  list-style: none;
+  padding: 0;
+}
+
+.benefits-list li {
+  padding: 15px 20px;
+  background: var(--color-surface);
+  margin-bottom: 12px;
+  border-radius: 10px;
+  font-size: 18px;
+  color: var(--color-text);
+  border: 1px solid var(--color-border);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.benefits-list li::before {
+  content: '✓';
+  color: var(--color-accent);
+  font-weight: bold;
+}
+
+@media (max-width: 768px) {
+  .hero-subtitle {
+    font-size: 1rem;
+  }
+  
+  .hero-actions {
+    flex-direction: column;
+    align-items: center;
+  }
+}
+

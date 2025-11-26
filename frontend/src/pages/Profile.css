@@ -1,0 +1,76 @@
+.profile-page {
+  padding: 30px 0;
+}
+
+.profile-section {
+  background: var(--color-surface);
+  padding: 30px;
+  border-radius: 16px;
+  box-shadow: 0 20px 45px var(--color-card-shadow);
+  margin-bottom: 30px;
+  border: 1px solid var(--color-border);
+}
+
+.profile-section h2 {
+  margin-bottom: 20px;
+  color: var(--color-text);
+}
+
+.profile-form,
+.skill-form {
+  max-width: 600px;
+}
+
+.message {
+  padding: 15px;
+  border-radius: 10px;
+  margin-bottom: 20px;
+  border: 1px solid transparent;
+}
+
+.message.success {
+  background-color: rgba(34, 197, 94, 0.15);
+  color: #22c55e;
+  border-color: rgba(34, 197, 94, 0.4);
+}
+
+.message.error {
+  background-color: rgba(239, 68, 68, 0.15);
+  color: #ef4444;
+  border-color: rgba(239, 68, 68, 0.4);
+}
+
+.skills-list {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.skill-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+  padding: 18px;
+  background: var(--color-surface-alt);
+  border-radius: 12px;
+  border: 1px solid var(--color-border);
+}
+
+.skill-item h3 {
+  margin-bottom: 5px;
+  color: var(--color-text);
+}
+
+.skill-item p {
+  color: var(--color-text-muted);
+  font-size: 14px;
+}
+
+.empty-message {
+  color: var(--color-text-muted);
+  font-style: italic;
+  padding: 20px;
+  text-align: center;
+}
+
