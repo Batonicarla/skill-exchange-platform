@@ -73,7 +73,7 @@ const Sessions = () => {
     if (sessionId) {
       fetchSessionDetails();
     }
-  }, [sessionId]);
+  }, [sessionId, fetchSessionDetails]);
 
   const handleProposeSession = async (e) => {
     e.preventDefault();
