@@ -44,10 +44,10 @@ const skillValidation = [
 
 // Session validation rules
 const sessionValidation = [
-  body('partnerEmail').isEmail().withMessage('Valid partner email is required'),
-  body('proposedDate').notEmpty().withMessage('Date is required'),
-  body('proposedTime').notEmpty().withMessage('Time is required'),
-  body('skill').trim().notEmpty().withMessage('Skill name is required'),
+  body('partnerEmail').optional().isEmail().withMessage('Valid partner email is required'),
+  body('proposedDate').optional().notEmpty().withMessage('Date is required'),
+  body('proposedTime').optional().notEmpty().withMessage('Time is required'),
+  body('skill').optional().trim().notEmpty().withMessage('Skill name is required'),
   validate
 ];
 
