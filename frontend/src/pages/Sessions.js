@@ -269,26 +269,7 @@ const Sessions = () => {
             </div>
 
             <div className="session-actions">
-              {sessionDetails.status === 'pending' && sessionDetails.role === 'partner' && (
-                <div className="action-group">
-                  <h4>Respond to Session Request</h4>
-                  <p>Someone wants to learn {sessionDetails.skill} from you!</p>
-                  <button
-                    onClick={() => handleRespondToSession(sessionId, 'confirm')}
-                    className="btn btn-primary"
-                    disabled={loading}
-                  >
-                    ✓ Accept Session
-                  </button>
-                  <button
-                    onClick={() => handleRespondToSession(sessionId, 'reject')}
-                    className="btn btn-danger"
-                    disabled={loading}
-                  >
-                    ✗ Decline Session
-                  </button>
-                </div>
-              )}
+
               
               {sessionDetails.status === 'pending' && sessionDetails.role === 'proposer' && (
                 <div className="action-group">
@@ -499,7 +480,10 @@ const Sessions = () => {
                     </div>
                     <span
                       className="session-status"
-                      style={{ backgroundColor: getStatusColor(session.status) }}
+                      style={{ 
+                        backgroundColor: getStatusColor(session.status),
+                        display: session.status === 'confirmed' ? 'none' : 'block'
+                      }}
                     >
                       {session.status.toUpperCase()}
                     </span>
