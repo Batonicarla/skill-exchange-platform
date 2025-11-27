@@ -33,8 +33,8 @@ body[data-theme='dark'] {
   --color-card-shadow: rgba(0, 0, 0, 0.4);
   --color-text: #f1f5f9;
   --color-text-muted: #a5b4fc;
-  --color-primary: #f97316;
-  --color-primary-hover: #ea580c;
+  --color-primary: #ffffff;
+  --color-primary-hover: #e2e8f0;
   --color-secondary: #475569;
   --color-secondary-hover: #334155;
   --color-danger: #f87171;
@@ -93,13 +93,14 @@ code {
 
 .btn-primary {
   background-color: var(--color-primary);
-  color: white;
+  color: var(--color-background);
   border: 1px solid var(--color-primary);
 }
 
 .btn-primary:hover {
   background-color: var(--color-primary-hover);
   border-color: var(--color-primary-hover);
+  color: var(--color-background);
 }
 
 .btn-secondary {
@@ -140,13 +141,14 @@ button, .btn, input[type="submit"] {
 /* Fix any white buttons */
 button:not([class*="btn-"]), .btn:not([class*="btn-"]) {
   background-color: var(--color-primary);
-  color: white;
+  color: var(--color-background);
   border: 1px solid var(--color-primary);
 }
 
 button:not([class*="btn-"]):hover, .btn:not([class*="btn-"]):hover {
   background-color: var(--color-primary-hover);
   border-color: var(--color-primary-hover);
+  color: var(--color-background);
 }
 
 .btn-danger {
