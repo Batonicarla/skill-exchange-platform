@@ -49,21 +49,8 @@ const sendMessage = async (req, res) => {
 
     console.log('Message inserted:', messageData);
 
-    // Try to create/update chat - ignore errors for now
-    try {
-      await supabase
-        .from('chats')
-        .upsert({
-          id: chatId,
-          participants: [senderId, receiverId],
-          last_message: message.trim(),
-          last_message_time: new Date().toISOString()
-        }, {
-          onConflict: 'id'
-        });
-    } catch (chatError) {
-      console.log('Chat upsert failed, but message was sent:', chatError);
-    }
+    // Skip chat creation for now - just send the message
+    console.log('Message sent successfully, skipping chat update');
 
     if (chatError) {
       console.error('Chat upsert error:', chatError);
