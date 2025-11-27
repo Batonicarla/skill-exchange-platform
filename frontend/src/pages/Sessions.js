@@ -57,7 +57,6 @@ const Sessions = () => {
     const urlParams = new URLSearchParams(location.search);
     const shouldPropose = urlParams.get('propose');
     const email = urlParams.get('email');
-    const name = urlParams.get('name');
     
     if (shouldPropose === 'true') {
       setShowProposeForm(true);
@@ -169,16 +168,7 @@ const Sessions = () => {
     }
   };
 
-  const getStatusColor = (status) => {
-    const colors = {
-      pending: '#f97316',
-      confirmed: '#22c55e',
-      rejected: '#ef4444',
-      completed: '#475569',
-      cancelled: '#94a3b8'
-    };
-    return colors[status] || '#475569';
-  };
+
 
   const formatDateTime = (date, time) => {
     if (!date) return '';
@@ -494,7 +484,6 @@ const Sessions = () => {
           <div className="sessions-list">
             {sessions.map((session) => {
               const isTeaching = session.role === 'partner';
-              const isLearning = session.role === 'proposer';
               
               return (
                 <div key={session.sessionId} className="session-card">
