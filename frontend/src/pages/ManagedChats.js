@@ -100,10 +100,15 @@ const ManagedChats = () => {
   // Send message
   const handleSendMessage = async (e) => {
     e.preventDefault();
-    if (!newMessage.trim() || !partnerId) return;
+    if (!newMessage.trim() || !partnerId) {
+      console.log('Cannot send message:', { newMessage: newMessage.trim(), partnerId });
+      return;
+    }
 
     const messageText = newMessage;
     setNewMessage('');
+
+    console.log('Sending message:', { receiverId: partnerId, message: messageText });
 
     try {
       const response = await api.post('/chat/send', {
@@ -111,16 +116,25 @@ const ManagedChats = () => {
         message: messageText
       });
       
+      console.log('Send message response:', response.data);
+      
       if (response.data.success) {
         // Reload messages to get the latest
         loadMessages();
+        setNotification('✅ Message sent!');
+        setTimeout(() => setNotification(''), 2000);
       } else {
         setNewMessage(messageText); // Restore on failure
         console.error('Failed to send message:', response.data.message);
+        setNotification(`❌ ${response.data.message}`);
+        setTimeout(() => setNotification(''), 3000);
       }
     } catch (error) {
       console.error('Error sending message:', error);
       setNewMessage(messageText); // Restore on failure
+      const errorMsg = error.response?.data?.message || 'Failed to send message';
+      setNotification(`❌ ${errorMsg}`);
+      setTimeout(() => setNotification(''), 3000);
     }
   };
 
