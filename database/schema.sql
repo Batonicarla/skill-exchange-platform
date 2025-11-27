@@ -18,7 +18,7 @@ CREATE TABLE users (
 
 -- Chats table
 CREATE TABLE chats (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  id VARCHAR(255) PRIMARY KEY,
   participants UUID[] NOT NULL,
   last_message TEXT,
   last_message_time TIMESTAMP WITH TIME ZONE,
@@ -29,7 +29,7 @@ CREATE TABLE chats (
 -- Messages table
 CREATE TABLE messages (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  chat_id UUID REFERENCES chats(id) ON DELETE CASCADE,
+  chat_id VARCHAR(255) REFERENCES chats(id) ON DELETE CASCADE,
   sender_id UUID NOT NULL,
   receiver_id UUID NOT NULL,
   message TEXT NOT NULL,
