@@ -138,7 +138,9 @@ const Sessions = () => {
         }
         
         // Refresh sessions list in background
-        fetchSessions();
+        setTimeout(() => {
+          fetchSessions();
+        }, 500);
       }
     } catch (error) {
       setMessage(error.response?.data?.message || 'Error responding to session');

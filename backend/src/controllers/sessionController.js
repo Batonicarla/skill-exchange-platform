@@ -215,29 +215,59 @@ const getUserSessions = async (req, res) => {
 
     const sessions = [];
 
-    // Process proposer sessions
-    (proposerSessions || []).forEach(session => {
-      sessions.push({
-        sessionId: session.id,
-        ...session,
-        role: 'proposer'
-      });
-    });
+    // Process proposer sessions (user is learning)
+    for (const session of proposerSessions || []) {
+      // Get partner (teacher) info
+      const { data: partnerData } = await supabase
+        .from('users')
+        .select('display_name')
+        .eq('uid', session.partner_id)
+        .single();
 
-    // Process partner sessions
-    (partnerSessions || []).forEach(session => {
       sessions.push({
         sessionId: session.id,
-        ...session,
-        role: 'partner'
+        skill: session.skill,
+        proposedDate: session.proposed_date,
+        proposedTime: session.proposed_time,
+        notes: session.notes,
+        status: session.status,
+        createdAt: session.created_at,
+        role: 'proposer',
+        proposerId: session.proposer_id,
+        partnerId: session.partner_id,
+        partnerName: partnerData?.display_name || 'Unknown'
       });
-    });
+    }
+
+    // Process partner sessions (user is teaching)
+    for (const session of partnerSessions || []) {
+      // Get proposer (student) info
+      const { data: proposerData } = await supabase
+        .from('users')
+        .select('display_name')
+        .eq('uid', session.proposer_id)
+        .single();
+
+      sessions.push({
+        sessionId: session.id,
+        skill: session.skill,
+        proposedDate: session.proposed_date,
+        proposedTime: session.proposed_time,
+        notes: session.notes,
+        status: session.status,
+        createdAt: session.created_at,
+        role: 'partner',
+        proposerId: session.proposer_id,
+        partnerId: session.partner_id,
+        partnerName: proposerData?.display_name || 'Unknown'
+      });
+    }
 
     // Sort by session date
     sessions.sort((a, b) => {
-      if (!a.session_datetime) return 1;
-      if (!b.session_datetime) return -1;
-      return new Date(a.session_datetime) - new Date(b.session_datetime);
+      const dateA = new Date(a.proposedDate + 'T' + a.proposedTime);
+      const dateB = new Date(b.proposedDate + 'T' + b.proposedTime);
+      return dateA - dateB;
     });
 
     res.json({
