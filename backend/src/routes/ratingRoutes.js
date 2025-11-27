@@ -8,7 +8,7 @@ const { ratingValidation } = require('../utils/validators');
 router.use(verifyToken);
 
 // Rating routes
-router.post('/', ratingValidation, submitRating);
+router.post('/submit', ratingValidation, submitRating);
 router.get('/user/:userId', getUserRatings);
 
 module.exports = router;

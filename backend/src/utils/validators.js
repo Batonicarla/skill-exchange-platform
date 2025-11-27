@@ -45,14 +45,15 @@ const skillValidation = [
 // Session validation rules
 const sessionValidation = [
   body('partnerEmail').isEmail().withMessage('Valid partner email is required'),
-  body('proposedDate').matches(/^\d{4}-\d{2}-\d{2}$/).withMessage('Valid date format (YYYY-MM-DD) is required'),
-  body('proposedTime').matches(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/).withMessage('Valid time format (HH:MM) is required'),
+  body('proposedDate').notEmpty().withMessage('Date is required'),
+  body('proposedTime').notEmpty().withMessage('Time is required'),
   body('skill').trim().notEmpty().withMessage('Skill name is required'),
   validate
 ];
 
 // Rating validation rules
 const ratingValidation = [
+  body('partnerId').notEmpty().withMessage('Partner ID is required'),
   body('rating').isInt({ min: 1, max: 5 }).withMessage('Rating must be between 1 and 5'),
   body('review').optional().isLength({ max: 1000 }).withMessage('Review must be less than 1000 characters'),
   validate

@@ -40,33 +40,17 @@ const sendMessage = async (req, res) => {
 
     if (messageError) throw messageError;
 
-    // Check if chat exists
-    const { data: existingChat } = await supabase
+    // Upsert chat (create or update)
+    await supabase
       .from('chats')
-      .select('id')
-      .eq('id', chatId)
-      .single();
-
-    if (!existingChat) {
-      // Create chat
-      await supabase
-        .from('chats')
-        .insert({
-          id: chatId,
-          participants: [senderId, receiverId],
-          last_message: message.trim(),
-          last_message_time: new Date().toISOString()
-        });
-    } else {
-      // Update chat
-      await supabase
-        .from('chats')
-        .update({
-          last_message: message.trim(),
-          last_message_time: new Date().toISOString()
-        })
-        .eq('id', chatId);
-    }
+      .upsert({
+        id: chatId,
+        participants: [senderId, receiverId],
+        last_message: message.trim(),
+        last_message_time: new Date().toISOString()
+      }, {
+        onConflict: 'id'
+      });
 
     res.json({
       success: true,

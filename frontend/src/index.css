@@ -92,21 +92,38 @@ code {
 }
 
 .btn-primary {
-  background-color: var(--color-primary);
-  color: var(--color-surface);
+  background-color: var(--color-accent);
+  color: white;
 }
 
 .btn-primary:hover {
-  background-color: var(--color-primary-hover);
+  background-color: var(--color-accent-hover);
 }
 
 .btn-secondary {
   background-color: var(--color-secondary);
-  color: var(--color-surface);
+  color: white;
 }
 
 .btn-secondary:hover {
   background-color: var(--color-secondary-hover);
+}
+
+.btn-accent {
+  background-color: var(--color-accent);
+  color: white;
+  border: none;
+  padding: 10px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+
+.btn-accent:hover {
+  background-color: var(--color-accent-hover);
+  transform: translateY(-1px);
 }
 
 .btn-danger {

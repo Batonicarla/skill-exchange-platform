@@ -109,20 +109,3 @@
   gap: 8px;
 }
 
-.btn-accent {
-  background: var(--color-accent);
-  color: white;
-  border: none;
-  padding: 10px 16px;
-  border-radius: 8px;
-  cursor: pointer;
-  font-size: 14px;
-  font-weight: 500;
-  transition: all 0.2s;
-}
-
-.btn-accent:hover {
-  background: #e97517;
-  transform: translateY(-1px);
-}
-
