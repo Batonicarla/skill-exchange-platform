@@ -202,12 +202,6 @@ const Sessions = () => {
           <div className="session-details-card">
             <div className="session-header">
               <h2>Session Details</h2>
-              <span 
-                className="status-badge"
-                style={{ backgroundColor: getStatusColor(sessionDetails.status) }}
-              >
-                {sessionDetails.status?.toUpperCase() || 'UNKNOWN'}
-              </span>
             </div>
             
             {message && (
