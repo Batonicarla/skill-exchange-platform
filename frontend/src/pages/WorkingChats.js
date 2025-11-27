@@ -96,7 +96,7 @@ const WorkingChats = () => {
           onClick={() => navigate('/matches')} 
           style={{
             padding: '12px 24px',
-            backgroundColor: '#000',
+            backgroundColor: '#6b7280',
             color: 'white',
             border: 'none',
             borderRadius: '8px',
@@ -177,7 +177,7 @@ const WorkingChats = () => {
                     maxWidth: '70%',
                     padding: '12px 16px',
                     borderRadius: '18px',
-                    backgroundColor: isOwn ? '#000' : 'var(--color-surface-alt)',
+                    backgroundColor: isOwn ? '#6b7280' : 'var(--color-surface-alt)',
                     color: isOwn ? 'white' : 'var(--color-text)',
                     wordWrap: 'break-word'
                   }}
@@ -227,7 +227,7 @@ const WorkingChats = () => {
           disabled={!newMessage.trim()}
           style={{
             padding: '12px 24px',
-            backgroundColor: '#000',
+            backgroundColor: '#6b7280',
             color: 'white',
             border: 'none',
             borderRadius: '24px',

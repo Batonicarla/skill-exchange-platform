@@ -33,10 +33,10 @@ body[data-theme='dark'] {
   --color-card-shadow: rgba(0, 0, 0, 0.4);
   --color-text: #f1f5f9;
   --color-text-muted: #a5b4fc;
-  --color-primary: #000000;
-  --color-primary-hover: #1f1f1f;
-  --color-secondary: #000000;
-  --color-secondary-hover: #1f1f1f;
+  --color-primary: #6b7280;
+  --color-primary-hover: #4b5563;
+  --color-secondary: #6b7280;
+  --color-secondary-hover: #4b5563;
   --color-danger: #f87171;
   --color-danger-hover: #ef4444;
   --color-input-bg: #15213b;
@@ -46,8 +46,8 @@ body[data-theme='dark'] {
   --color-nav-text: #f8fafc;
   --color-link: #f8fafc;
   --color-link-hover: #f97316;
-  --color-accent: #000000;
-  --color-accent-hover: #1f1f1f;
+  --color-accent: #6b7280;
+  --color-accent-hover: #4b5563;
   --color-hero-gradient-start: #0b1120;
   --color-hero-gradient-end: #020617;
 }

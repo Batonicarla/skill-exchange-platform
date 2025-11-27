@@ -47,16 +47,16 @@
 }
 
 .hero-actions .btn-primary {
-  background: var(--color-accent);
+  background: var(--color-primary);
   color: white;
-  border-color: var(--color-accent);
+  border-color: var(--color-primary);
 }
 
 .hero-actions .btn-primary:hover {
-  background: var(--color-accent-hover);
-  border-color: var(--color-accent-hover);
+  background: var(--color-primary-hover);
+  border-color: var(--color-primary-hover);
   transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(249, 115, 22, 0.3);
+  box-shadow: 0 8px 25px rgba(107, 114, 128, 0.3);
 }
 
 .hero-actions .btn-secondary {
