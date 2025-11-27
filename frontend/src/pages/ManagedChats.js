@@ -13,6 +13,7 @@ const ManagedChats = () => {
   const [chats, setChats] = useState([]);
   const [loading, setLoading] = useState(false);
   const [showSessionForm, setShowSessionForm] = useState(false);
+  const [notification, setNotification] = useState('');
   const [sessionRequest, setSessionRequest] = useState({
     skill: '',
     date: '',
@@ -59,25 +60,31 @@ const ManagedChats = () => {
   const loadMessages = async () => {
     if (!partnerId) return;
     
-    setLoading(true);
     try {
       const response = await api.get(`/chat/history/${partnerId}`);
       if (response.data.success) {
         setMessages(response.data.data || []);
+      } else {
+        setMessages([]);
       }
     } catch (error) {
       console.error('Error loading messages:', error);
       setMessages([]);
-    } finally {
-      setLoading(false);
     }
   };
 
   // Initialize chat when partner is selected
   useEffect(() => {
     if (partnerId && userData?.uid) {
-      loadPartner();
-      loadMessages();
+      setLoading(true);
+      
+      const initializeChat = async () => {
+        await loadPartner();
+        await loadMessages();
+        setLoading(false);
+      };
+      
+      initializeChat();
       
       // Poll for new messages every 3 seconds
       const interval = setInterval(loadMessages, 3000);
@@ -85,6 +92,7 @@ const ManagedChats = () => {
       return () => clearInterval(interval);
     } else {
       // Load chats list when no partner selected
+      setLoading(false);
       loadChats();
     }
   }, [partnerId, userData?.uid]);
@@ -104,16 +112,11 @@ const ManagedChats = () => {
       });
       
       if (response.data.success) {
-        // Add message to local state immediately
-        const newMsg = {
-          sender_id: userData.uid,
-          receiver_id: partnerId,
-          message: messageText,
-          created_at: new Date().toISOString()
-        };
-        setMessages(prev => [...prev, newMsg]);
+        // Reload messages to get the latest
+        loadMessages();
       } else {
         setNewMessage(messageText); // Restore on failure
+        console.error('Failed to send message:', response.data.message);
       }
     } catch (error) {
       console.error('Error sending message:', error);
@@ -142,19 +145,17 @@ const ManagedChats = () => {
         const sessionMessage = `📅 Session Request Sent\n\n🎯 Skill: ${sessionRequest.skill}\n📅 Date: ${new Date(sessionRequest.date).toLocaleDateString()}\n🕐 Time: ${sessionRequest.time}\n⏱️ Duration: ${sessionRequest.duration} minutes\n📍 Location: ${sessionRequest.location || 'To be decided'}\n\n${sessionRequest.notes ? '📝 Notes: ' + sessionRequest.notes : ''}`;
         
         // Send session request as message
-        await api.post('/chat/send', {
+        const sessionResponse = await api.post('/chat/send', {
           receiverId: partnerId,
           message: sessionMessage
         });
         
-        // Add to local messages
-        const newMsg = {
-          sender_id: userData.uid,
-          receiver_id: partnerId,
-          message: sessionMessage,
-          created_at: new Date().toISOString()
-        };
-        setMessages(prev => [...prev, newMsg]);
+        if (sessionResponse.data.success) {
+          // Reload messages to show the session request
+          loadMessages();
+          setNotification('📤 Session request sent!');
+          setTimeout(() => setNotification(''), 3000);
+        }
         
         setShowSessionForm(false);
         setSessionRequest({
@@ -371,12 +372,25 @@ const ManagedChats = () => {
               flexDirection: 'column',
               gap: '12px'
             }}>
+              {notification && (
+                <div style={{
+                  padding: '12px 16px',
+                  backgroundColor: '#22c55e',
+                  color: 'white',
+                  borderRadius: '8px',
+                  textAlign: 'center',
+                  marginBottom: '16px'
+                }}>
+                  {notification}
+                </div>
+              )}
               {loading ? (
-                <div style={{ textAlign: 'center', color: 'var(--color-text-muted)' }}>
-                  Loading messages...
+                <div style={{ textAlign: 'center', color: 'var(--color-text-muted)', padding: '40px' }}>
+                  <div style={{ fontSize: '32px', marginBottom: '16px' }}>💬</div>
+                  <p>Loading messages...</p>
                 </div>
               ) : messages.length === 0 ? (
-                <div style={{ textAlign: 'center', color: 'var(--color-text-muted)' }}>
+                <div style={{ textAlign: 'center', color: 'var(--color-text-muted)', padding: '40px' }}>
                   <div style={{ fontSize: '48px', marginBottom: '16px' }}>👋</div>
                   <p>No messages yet. Start the conversation!</p>
                 </div>
