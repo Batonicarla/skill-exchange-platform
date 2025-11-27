@@ -265,37 +265,7 @@ const Sessions = () => {
                 )}
               </div>
 
-              <div className="info-section">
-                <h3>📅 Session Status</h3>
-                <div className="info-row">
-                  <strong>Current Status:</strong>
-                  <span style={{ 
-                    color: getStatusColor(sessionDetails.status),
-                    fontWeight: 'bold',
-                    textTransform: 'uppercase'
-                  }}>
-                    {sessionDetails.status}
-                  </span>
-                </div>
-                {sessionDetails.status === 'pending' && sessionDetails.role === 'proposer' && (
-                  <div className="info-row">
-                    <strong>Waiting for:</strong>
-                    <span>{sessionDetails.partner?.displayName || 'Partner'} to respond to your request</span>
-                  </div>
-                )}
-                {sessionDetails.status === 'confirmed' && (
-                  <div className="info-row">
-                    <strong>Status:</strong>
-                    <span style={{ color: '#22c55e', fontWeight: 'bold' }}>✅ Session Confirmed! Ready to start learning.</span>
-                  </div>
-                )}
-                {sessionDetails.respondedAt && (
-                  <div className="info-row">
-                    <strong>Response Date:</strong>
-                    <span>{new Date(sessionDetails.respondedAt).toLocaleString()}</span>
-                  </div>
-                )}
-              </div>
+
             </div>
 
             <div className="session-actions">
