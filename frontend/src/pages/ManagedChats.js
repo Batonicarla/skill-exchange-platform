@@ -13,6 +13,15 @@ const ManagedChats = () => {
   const [partner, setPartner] = useState(null);
   const [chats, setChats] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [showSessionForm, setShowSessionForm] = useState(false);
+  const [sessionRequest, setSessionRequest] = useState({
+    skill: '',
+    date: '',
+    time: '',
+    duration: '60',
+    location: '',
+    notes: ''
+  });
   const messagesEndRef = useRef(null);
 
   // Auto scroll to bottom
@@ -91,6 +100,43 @@ const ManagedChats = () => {
     const success = await chatManager.sendMessage(partnerId, messageText);
     if (!success) {
       setNewMessage(messageText); // Restore message on failure
+    }
+  };
+
+  // Send session request
+  const handleSendSessionRequest = async (e) => {
+    e.preventDefault();
+    if (!partnerId) return;
+
+    try {
+      const response = await api.post('/sessions/propose', {
+        partnerEmail: partner?.email,
+        proposedDate: sessionRequest.date,
+        proposedTime: sessionRequest.time,
+        skill: sessionRequest.skill,
+        duration: sessionRequest.duration,
+        location: sessionRequest.location,
+        notes: sessionRequest.notes
+      });
+
+      if (response.data.success) {
+        // Send a special message in chat about the session request
+        const sessionMessage = `📅 Session Request Sent\n\n🎯 Skill: ${sessionRequest.skill}\n📅 Date: ${new Date(sessionRequest.date).toLocaleDateString()}\n🕐 Time: ${sessionRequest.time}\n⏱️ Duration: ${sessionRequest.duration} minutes\n📍 Location: ${sessionRequest.location || 'To be decided'}\n\n${sessionRequest.notes ? '📝 Notes: ' + sessionRequest.notes : ''}`;
+        
+        await chatManager.sendMessage(partnerId, sessionMessage);
+        
+        setShowSessionForm(false);
+        setSessionRequest({
+          skill: '',
+          date: '',
+          time: '',
+          duration: '60',
+          location: '',
+          notes: ''
+        });
+      }
+    } catch (error) {
+      console.error('Error sending session request:', error);
     }
   };
 
@@ -295,9 +341,25 @@ const ChatInterface = ({ partnerId, partner, messages, newMessage, setNewMessage
         }}>
           {partner?.displayName?.charAt(0) || '?'}
         </div>
-        <h3 style={{ margin: 0, color: 'var(--color-text)' }}>
-          {partner?.displayName || partner?.display_name || 'Chat'}
-        </h3>
+        <div style={{ flex: 1 }}>
+          <h3 style={{ margin: 0, color: 'var(--color-text)' }}>
+            {partner?.displayName || partner?.display_name || 'Chat'}
+          </h3>
+        </div>
+        <button
+          onClick={() => setShowSessionForm(!showSessionForm)}
+          style={{
+            padding: '8px 16px',
+            backgroundColor: '#6b7280',
+            color: 'white',
+            border: 'none',
+            borderRadius: '8px',
+            cursor: 'pointer',
+            fontSize: '14px'
+          }}
+        >
+          📅 Request Session
+        </button>
       </div>
 
       {/* Messages */}
@@ -352,6 +414,137 @@ const ChatInterface = ({ partnerId, partner, messages, newMessage, setNewMessage
         )}
         <div ref={messagesEndRef} />
       </div>
+
+      {/* Session Request Form */}
+      {showSessionForm && (
+        <div style={{
+          padding: '20px',
+          backgroundColor: 'var(--color-surface)',
+          borderTop: '1px solid var(--color-border)',
+          borderBottom: '1px solid var(--color-border)'
+        }}>
+          <h4 style={{ margin: '0 0 16px 0', color: 'var(--color-text)' }}>📅 Request Learning Session</h4>
+          <form onSubmit={handleSendSessionRequest} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+              <input
+                type="text"
+                placeholder="Skill to learn"
+                value={sessionRequest.skill}
+                onChange={(e) => setSessionRequest({...sessionRequest, skill: e.target.value})}
+                required
+                style={{
+                  padding: '8px 12px',
+                  border: '1px solid var(--color-border)',
+                  borderRadius: '8px',
+                  backgroundColor: 'var(--color-background)',
+                  color: 'var(--color-text)'
+                }}
+              />
+              <select
+                value={sessionRequest.duration}
+                onChange={(e) => setSessionRequest({...sessionRequest, duration: e.target.value})}
+                style={{
+                  padding: '8px 12px',
+                  border: '1px solid var(--color-border)',
+                  borderRadius: '8px',
+                  backgroundColor: 'var(--color-background)',
+                  color: 'var(--color-text)'
+                }}
+              >
+                <option value="30">30 minutes</option>
+                <option value="60">1 hour</option>
+                <option value="90">1.5 hours</option>
+                <option value="120">2 hours</option>
+              </select>
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+              <input
+                type="date"
+                value={sessionRequest.date}
+                onChange={(e) => setSessionRequest({...sessionRequest, date: e.target.value})}
+                required
+                min={new Date().toISOString().split('T')[0]}
+                style={{
+                  padding: '8px 12px',
+                  border: '1px solid var(--color-border)',
+                  borderRadius: '8px',
+                  backgroundColor: 'var(--color-background)',
+                  color: 'var(--color-text)'
+                }}
+              />
+              <input
+                type="time"
+                value={sessionRequest.time}
+                onChange={(e) => setSessionRequest({...sessionRequest, time: e.target.value})}
+                required
+                style={{
+                  padding: '8px 12px',
+                  border: '1px solid var(--color-border)',
+                  borderRadius: '8px',
+                  backgroundColor: 'var(--color-background)',
+                  color: 'var(--color-text)'
+                }}
+              />
+            </div>
+            <input
+              type="text"
+              placeholder="Location or meeting link"
+              value={sessionRequest.location}
+              onChange={(e) => setSessionRequest({...sessionRequest, location: e.target.value})}
+              style={{
+                padding: '8px 12px',
+                border: '1px solid var(--color-border)',
+                borderRadius: '8px',
+                backgroundColor: 'var(--color-background)',
+                color: 'var(--color-text)'
+              }}
+            />
+            <textarea
+              placeholder="Additional notes (optional)"
+              value={sessionRequest.notes}
+              onChange={(e) => setSessionRequest({...sessionRequest, notes: e.target.value})}
+              rows="2"
+              style={{
+                padding: '8px 12px',
+                border: '1px solid var(--color-border)',
+                borderRadius: '8px',
+                backgroundColor: 'var(--color-background)',
+                color: 'var(--color-text)',
+                resize: 'vertical'
+              }}
+            />
+            <div style={{ display: 'flex', gap: '8px' }}>
+              <button
+                type="button"
+                onClick={() => setShowSessionForm(false)}
+                style={{
+                  padding: '8px 16px',
+                  backgroundColor: 'transparent',
+                  color: 'var(--color-text)',
+                  border: '1px solid var(--color-border)',
+                  borderRadius: '8px',
+                  cursor: 'pointer'
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                style={{
+                  padding: '8px 16px',
+                  backgroundColor: '#6b7280',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '8px',
+                  cursor: 'pointer'
+                }}
+              >
+                📤 Send Request
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
 
       {/* Input */}
       <form 

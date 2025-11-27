@@ -125,12 +125,7 @@ const Sessions = () => {
         }));
         
         if (action === 'confirm') {
-          setMessage('🎉 Session confirmed! Redirecting to chat...');
-          // Auto-redirect to chat after 2 seconds
-          setTimeout(() => {
-            const partnerId = sessionDetails.role === 'proposer' ? sessionDetails.partnerId : sessionDetails.proposerId;
-            navigate(`/chats/${partnerId}`);
-          }, 2000);
+          setMessage('🎉 Session confirmed! You can now chat to coordinate the session details.');
         } else {
           setMessage('Session declined.');
         }

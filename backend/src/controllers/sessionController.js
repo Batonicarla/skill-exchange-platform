@@ -6,7 +6,7 @@ const { supabase } = require('../config/firebase');
  */
 const proposeSession = async (req, res) => {
   try {
-    const { partnerEmail, proposedDate, proposedTime, skill, notes } = req.body;
+    const { partnerEmail, proposedDate, proposedTime, skill, duration, location, notes } = req.body;
     const proposerId = req.user.uid;
 
     if (!partnerEmail || !proposedDate || !proposedTime || !skill) {
@@ -58,6 +58,8 @@ const proposeSession = async (req, res) => {
         proposed_date: proposedDate,
         proposed_time: proposedTime,
         session_datetime: sessionDateTime.toISOString(),
+        duration: duration || 60,
+        location: location || '',
         notes: notes || '',
         status: 'pending'
       })
