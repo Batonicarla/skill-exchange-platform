@@ -9,6 +9,8 @@ const sendMessage = async (req, res) => {
     const { receiverId, message } = req.body;
     const senderId = req.user.uid;
 
+    console.log('Send message request:', { senderId, receiverId, message });
+
     if (!receiverId || !message) {
       return res.status(400).json({
         success: false,
@@ -25,6 +27,7 @@ const sendMessage = async (req, res) => {
 
     // Create chat ID (consistent regardless of sender/receiver order)
     const chatId = [senderId, receiverId].sort().join('_');
+    console.log('Generated chat ID:', chatId);
 
     // Insert message
     const { data: messageData, error: messageError } = await supabase
@@ -33,15 +36,21 @@ const sendMessage = async (req, res) => {
         chat_id: chatId,
         sender_id: senderId,
         receiver_id: receiverId,
-        message: message.trim()
+        message: message.trim(),
+        read: false
       })
       .select()
       .single();
 
-    if (messageError) throw messageError;
+    if (messageError) {
+      console.error('Message insert error:', messageError);
+      throw messageError;
+    }
+
+    console.log('Message inserted:', messageData);
 
     // Upsert chat (create or update)
-    await supabase
+    const { error: chatError } = await supabase
       .from('chats')
       .upsert({
         id: chatId,
@@ -52,6 +61,10 @@ const sendMessage = async (req, res) => {
         onConflict: 'id'
       });
 
+    if (chatError) {
+      console.error('Chat upsert error:', chatError);
+    }
+
     res.json({
       success: true,
       message: 'Message sent successfully',
@@ -61,7 +74,8 @@ const sendMessage = async (req, res) => {
     console.error('Send message error:', error);
     res.status(500).json({
       success: false,
-      message: 'Error sending message'
+      message: 'Error sending message',
+      error: error.message
     });
   }
 };
