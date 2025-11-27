@@ -26,7 +26,12 @@ const RatingModal = ({ session, onClose, onSubmit }) => {
       }
     } catch (error) {
       console.error('Rating error:', error);
-      alert(error.response?.data?.message || 'Error submitting rating');
+      const errorMessage = error.response?.data?.message || error.message || 'Error submitting rating';
+      if (error.response?.status === 404) {
+        alert('Rating service not available. Please try again later.');
+      } else {
+        alert(errorMessage);
+      }
     } finally {
       setLoading(false);
     }

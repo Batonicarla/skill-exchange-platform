@@ -52,20 +52,29 @@ const proposeSession = async (req, res) => {
       });
     }
 
+    // Prepare session data - only include fields that exist in the table
+    const sessionInsertData = {
+      proposer_id: proposerId,
+      partner_id: partnerId,
+      skill: skill.trim(),
+      proposed_date: proposedDate,
+      proposed_time: proposedTime,
+      session_datetime: sessionDateTime.toISOString(),
+      notes: notes || '',
+      status: 'pending'
+    };
+
+    // Only add duration and location if they were provided (for backward compatibility)
+    if (duration !== undefined) {
+      sessionInsertData.duration = duration || 60;
+    }
+    if (location !== undefined) {
+      sessionInsertData.location = location || '';
+    }
+
     const { data: sessionData, error } = await supabase
       .from('sessions')
-      .insert({
-        proposer_id: proposerId,
-        partner_id: partnerId,
-        skill: skill.trim(),
-        proposed_date: proposedDate,
-        proposed_time: proposedTime,
-        session_datetime: sessionDateTime.toISOString(),
-        duration: duration || 60,
-        location: location || '',
-        notes: notes || '',
-        status: 'pending'
-      })
+      .insert(sessionInsertData)
       .select()
       .single();
 
