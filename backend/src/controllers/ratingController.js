@@ -1,9 +1,4 @@
-const { createClient } = require('@supabase/supabase-js');
-
-const supabase = createClient(
-  process.env.SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE_KEY
-);
+const { supabase } = require('../config/firebase');
 
 /**
  * Submit a rating and review
@@ -35,59 +30,73 @@ const submitRating = async (req, res) => {
       });
     }
 
-    // Check if session exists and user participated
-    const { data: sessionData, error: sessionError } = await supabase
-      .from('sessions')
-      .select('*')
-      .eq('id', sessionId)
-      .single();
+    // Check if this is a general rating or session-specific rating
+    let sessionData = null;
+    if (sessionId !== 'general-rating') {
+      const { data: session, error: sessionError } = await supabase
+        .from('sessions')
+        .select('*')
+        .eq('id', sessionId)
+        .single();
 
-    if (sessionError || !sessionData) {
-      return res.status(404).json({
-        success: false,
-        message: 'Session not found'
-      });
+      if (sessionError || !session) {
+        return res.status(404).json({
+          success: false,
+          message: 'Session not found'
+        });
+      }
+
+      sessionData = session;
+      if (sessionData.proposer_id !== userId && sessionData.partner_id !== userId) {
+        return res.status(403).json({
+          success: false,
+          message: 'You did not participate in this session'
+        });
+      }
+
+      if (sessionData.proposer_id !== partnerId && sessionData.partner_id !== partnerId) {
+        return res.status(400).json({
+          success: false,
+          message: 'Partner ID does not match session'
+        });
+      }
     }
 
-    if (sessionData.proposer_id !== userId && sessionData.partner_id !== userId) {
-      return res.status(403).json({
-        success: false,
-        message: 'You did not participate in this session'
-      });
-    }
-
-    if (sessionData.proposer_id !== partnerId && sessionData.partner_id !== partnerId) {
-      return res.status(400).json({
-        success: false,
-        message: 'Partner ID does not match session'
-      });
-    }
-
-    // Check if user already rated this session
-    const { data: existingRating } = await supabase
+    // Check if user already rated this session/user
+    let existingRatingQuery = supabase
       .from('ratings')
       .select('id')
-      .eq('session_id', sessionId)
       .eq('rater_id', userId)
-      .single();
+      .eq('rated_user_id', partnerId);
+    
+    if (sessionId !== 'general-rating') {
+      existingRatingQuery = existingRatingQuery.eq('session_id', sessionId);
+    }
+    
+    const { data: existingRating } = await existingRatingQuery.single();
 
     if (existingRating) {
       return res.status(400).json({
         success: false,
-        message: 'You have already rated this session'
+        message: sessionId === 'general-rating' ? 'You have already rated this user' : 'You have already rated this session'
       });
     }
 
     // Create rating
+    const ratingInsert = {
+      rater_id: userId,
+      rated_user_id: partnerId,
+      rating: parseInt(rating),
+      review: review || ''
+    };
+    
+    if (sessionId !== 'general-rating') {
+      ratingInsert.session_id = sessionId;
+    }
+    
     const { data: ratingData, error: ratingError } = await supabase
       .from('ratings')
-      .insert({
-        session_id: sessionId,
-        rater_id: userId,
-        rated_user_id: partnerId,
-        rating: parseInt(rating),
-        review: review || ''
-      })
+      .insert(ratingInsert)
       .select()
       .single();
 

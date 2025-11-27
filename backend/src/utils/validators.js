@@ -44,7 +44,7 @@ const skillValidation = [
 
 // Session validation rules
 const sessionValidation = [
-  body('partnerId').notEmpty().withMessage('Partner ID is required'),
+  body('partnerEmail').isEmail().withMessage('Valid partner email is required'),
   body('proposedDate').isISO8601().withMessage('Valid date is required'),
   body('proposedTime').matches(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/).withMessage('Valid time format (HH:MM) is required'),
   body('skill').trim().notEmpty().withMessage('Skill name is required'),

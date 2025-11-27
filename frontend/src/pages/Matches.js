@@ -1,11 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import api from '../services/api';
+import RatingModal from '../components/RatingModal';
 import './Matches.css';
 
 const Matches = () => {
   const [matches, setMatches] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [showRatingModal, setShowRatingModal] = useState(false);
+  const [selectedMatch, setSelectedMatch] = useState(null);
 
   useEffect(() => {
     fetchMatches();
@@ -88,10 +91,38 @@ const Matches = () => {
                   <Link to={`/chats/${match.uid}`} className="btn btn-secondary">
                     Start Chat
                   </Link>
+                  <button
+                    onClick={() => {
+                      setSelectedMatch({
+                        partnerId: match.uid,
+                        partnerName: match.displayName
+                      });
+                      setShowRatingModal(true);
+                    }}
+                    className="btn btn-accent"
+                  >
+                    Rate User
+                  </button>
                 </div>
               </div>
             ))}
           </div>
+        )}
+        
+        {showRatingModal && selectedMatch && (
+          <RatingModal
+            session={{
+              partnerId: selectedMatch.partnerId,
+              sessionId: 'general-rating' // For general ratings without specific session
+            }}
+            onClose={() => {
+              setShowRatingModal(false);
+              setSelectedMatch(null);
+            }}
+            onSubmit={() => {
+              fetchMatches(); // Refresh matches to show updated rating
+            }}
+          />
         )}
       </div>
     </div>

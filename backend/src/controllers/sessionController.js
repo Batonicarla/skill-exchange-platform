@@ -1,9 +1,4 @@
-const { createClient } = require('@supabase/supabase-js');
-
-const supabase = createClient(
-  process.env.SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE_KEY
-);
+const { supabase } = require('../config/firebase');
 
 /**
  * Propose a session
@@ -102,20 +97,21 @@ const respondToSession = async (req, res) => {
       });
     }
 
-    const sessionRef = db.collection('sessions').doc(sessionId);
-    const sessionDoc = await sessionRef.get();
+    const { data: sessionData, error: sessionError } = await supabase
+      .from('sessions')
+      .select('*')
+      .eq('id', sessionId)
+      .single();
 
-    if (!sessionDoc.exists) {
+    if (sessionError || !sessionData) {
       return res.status(404).json({
         success: false,
         message: 'Session not found'
       });
     }
 
-    const sessionData = sessionDoc.data();
-
     // Check if user is the partner (not the proposer)
-    if (sessionData.partnerId !== userId) {
+    if (sessionData.partner_id !== userId) {
       return res.status(403).json({
         success: false,
         message: 'Only the partner can respond to this session'
@@ -131,11 +127,15 @@ const respondToSession = async (req, res) => {
 
     const newStatus = action === 'confirm' ? 'confirmed' : 'rejected';
 
-    await sessionRef.update({
-      status: newStatus,
-      updatedAt: new Date(),
-      respondedAt: new Date()
-    });
+    const { error: updateError } = await supabase
+      .from('sessions')
+      .update({
+        status: newStatus,
+        responded_at: new Date().toISOString()
+      })
+      .eq('id', sessionId);
+
+    if (updateError) throw updateError;
 
     res.json({
       success: true,
@@ -160,60 +160,57 @@ const respondToSession = async (req, res) => {
 const getUserSessions = async (req, res) => {
   try {
     const userId = req.user.uid;
-    const { status } = req.query; // Optional filter by status
+    const { status } = req.query;
 
-    let query = db.collection('sessions')
-      .where('proposerId', '==', userId);
-
+    // Get sessions where user is proposer
+    let proposerQuery = supabase
+      .from('sessions')
+      .select('*')
+      .eq('proposer_id', userId);
+    
     if (status) {
-      query = query.where('status', '==', status);
+      proposerQuery = proposerQuery.eq('status', status);
     }
 
-    const snapshot = await query.get();
+    const { data: proposerSessions } = await proposerQuery;
 
-    // Also get sessions where user is the partner
-    let partnerQuery = db.collection('sessions')
-      .where('partnerId', '==', userId);
-
+    // Get sessions where user is partner
+    let partnerQuery = supabase
+      .from('sessions')
+      .select('*')
+      .eq('partner_id', userId);
+    
     if (status) {
-      partnerQuery = partnerQuery.where('status', '==', status);
+      partnerQuery = partnerQuery.eq('status', status);
     }
 
-    const partnerSnapshot = await partnerQuery.get();
+    const { data: partnerSessions } = await partnerQuery;
 
     const sessions = [];
 
     // Process proposer sessions
-    snapshot.forEach(doc => {
-      const sessionData = doc.data();
+    (proposerSessions || []).forEach(session => {
       sessions.push({
-        sessionId: doc.id,
-        ...sessionData,
-        sessionDateTime: sessionData.sessionDateTime?.toDate(),
-        createdAt: sessionData.createdAt?.toDate(),
-        updatedAt: sessionData.updatedAt?.toDate(),
+        sessionId: session.id,
+        ...session,
         role: 'proposer'
       });
     });
 
     // Process partner sessions
-    partnerSnapshot.forEach(doc => {
-      const sessionData = doc.data();
+    (partnerSessions || []).forEach(session => {
       sessions.push({
-        sessionId: doc.id,
-        ...sessionData,
-        sessionDateTime: sessionData.sessionDateTime?.toDate(),
-        createdAt: sessionData.createdAt?.toDate(),
-        updatedAt: sessionData.updatedAt?.toDate(),
+        sessionId: session.id,
+        ...session,
         role: 'partner'
       });
     });
 
     // Sort by session date
     sessions.sort((a, b) => {
-      if (!a.sessionDateTime) return 1;
-      if (!b.sessionDateTime) return -1;
-      return a.sessionDateTime - b.sessionDateTime;
+      if (!a.session_datetime) return 1;
+      if (!b.session_datetime) return -1;
+      return new Date(a.session_datetime) - new Date(b.session_datetime);
     });
 
     res.json({
