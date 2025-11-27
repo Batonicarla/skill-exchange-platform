@@ -33,10 +33,10 @@ body[data-theme='dark'] {
   --color-card-shadow: rgba(0, 0, 0, 0.4);
   --color-text: #f1f5f9;
   --color-text-muted: #a5b4fc;
-  --color-primary: #f8fafc;
-  --color-primary-hover: #e2e8f0;
-  --color-secondary: #cbd5f5;
-  --color-secondary-hover: #a5b4fc;
+  --color-primary: #f97316;
+  --color-primary-hover: #ea580c;
+  --color-secondary: #475569;
+  --color-secondary-hover: #334155;
   --color-danger: #f87171;
   --color-danger-hover: #ef4444;
   --color-input-bg: #15213b;
@@ -92,27 +92,31 @@ code {
 }
 
 .btn-primary {
-  background-color: var(--color-accent);
+  background-color: var(--color-primary);
   color: white;
+  border: 1px solid var(--color-primary);
 }
 
 .btn-primary:hover {
-  background-color: var(--color-accent-hover);
+  background-color: var(--color-primary-hover);
+  border-color: var(--color-primary-hover);
 }
 
 .btn-secondary {
   background-color: var(--color-secondary);
   color: white;
+  border: 1px solid var(--color-secondary);
 }
 
 .btn-secondary:hover {
   background-color: var(--color-secondary-hover);
+  border-color: var(--color-secondary-hover);
 }
 
 .btn-accent {
   background-color: var(--color-accent);
   color: white;
-  border: none;
+  border: 1px solid var(--color-accent);
   padding: 10px 16px;
   border-radius: 8px;
   cursor: pointer;
@@ -123,7 +127,26 @@ code {
 
 .btn-accent:hover {
   background-color: var(--color-accent-hover);
+  border-color: var(--color-accent-hover);
   transform: translateY(-1px);
+}
+
+/* Ensure all buttons have proper contrast */
+button, .btn, input[type="submit"] {
+  min-height: 40px;
+  font-weight: 500;
+}
+
+/* Fix any white buttons */
+button:not([class*="btn-"]), .btn:not([class*="btn-"]) {
+  background-color: var(--color-primary);
+  color: white;
+  border: 1px solid var(--color-primary);
+}
+
+button:not([class*="btn-"]):hover, .btn:not([class*="btn-"]):hover {
+  background-color: var(--color-primary-hover);
+  border-color: var(--color-primary-hover);
 }
 
 .btn-danger {
