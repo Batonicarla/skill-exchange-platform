@@ -99,10 +99,12 @@ const Sessions = () => {
       const response = await api.put(`/sessions/${sessionId}/respond`, { action });
       if (response.data.success) {
         setMessage(response.data.message);
-        fetchSessions();
-        if (sessionDetails) {
-          fetchSessionDetails();
-        }
+        
+        // Small delay to ensure backend update completes
+        setTimeout(async () => {
+          await fetchSessionDetails();
+          await fetchSessions();
+        }, 500);
         
         // If session was confirmed, show success message for longer
         if (action === 'confirm') {
