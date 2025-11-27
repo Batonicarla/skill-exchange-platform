@@ -188,33 +188,83 @@ const Sessions = () => {
 
             <div className="session-info">
               <div className="info-section">
-                <h3>Learning Details</h3>
+                <h3>🎯 Session Details</h3>
                 <div className="info-row">
-                  <strong>Skill:</strong>
+                  <strong>Skill to Learn:</strong>
                   <span>{sessionDetails.skill}</span>
                 </div>
                 <div className="info-row">
-                  <strong>Date & Time:</strong>
-                  <span>{formatDateTime(sessionDetails.proposedDate, sessionDetails.proposedTime)}</span>
+                  <strong>Proposed Date:</strong>
+                  <span>{new Date(sessionDetails.proposedDate).toLocaleDateString()}</span>
+                </div>
+                <div className="info-row">
+                  <strong>Proposed Time:</strong>
+                  <span>{sessionDetails.proposedTime}</span>
+                </div>
+                <div className="info-row">
+                  <strong>Session Created:</strong>
+                  <span>{new Date(sessionDetails.createdAt).toLocaleString()}</span>
                 </div>
                 {sessionDetails.notes && (
                   <div className="info-row">
-                    <strong>Notes:</strong>
+                    <strong>Your Notes:</strong>
                     <span>{sessionDetails.notes}</span>
+                  </div>
+                )}
+                {!sessionDetails.notes && (
+                  <div className="info-row">
+                    <strong>Notes:</strong>
+                    <span style={{ fontStyle: 'italic', color: 'var(--color-text-muted)' }}>No additional notes provided</span>
                   </div>
                 )}
               </div>
 
               <div className="info-section">
-                <h3>Partner Information</h3>
+                <h3>👤 Partner Information</h3>
                 <div className="info-row">
-                  <strong>Name:</strong>
-                  <span>{sessionDetails.partner?.displayName || sessionDetails.partner?.display_name || 'Unknown'}</span>
+                  <strong>Partner Name:</strong>
+                  <span>{sessionDetails.partner?.displayName || 'Unknown'}</span>
+                </div>
+                <div className="info-row">
+                  <strong>Partner Email:</strong>
+                  <span>{sessionDetails.partner?.email || 'Not available'}</span>
                 </div>
                 <div className="info-row">
                   <strong>Your Role:</strong>
-                  <span>{sessionDetails.role === 'proposer' ? 'Learning from them' : 'Teaching them'}</span>
+                  <span>{sessionDetails.role === 'proposer' ? '👨🎓 You are learning from them' : '👨🏫 You are teaching them'}</span>
                 </div>
+                {sessionDetails.partner?.bio && (
+                  <div className="info-row">
+                    <strong>Partner Bio:</strong>
+                    <span>{sessionDetails.partner.bio}</span>
+                  </div>
+                )}
+              </div>
+
+              <div className="info-section">
+                <h3>📅 Session Status</h3>
+                <div className="info-row">
+                  <strong>Current Status:</strong>
+                  <span style={{ 
+                    color: getStatusColor(sessionDetails.status),
+                    fontWeight: 'bold',
+                    textTransform: 'uppercase'
+                  }}>
+                    {sessionDetails.status}
+                  </span>
+                </div>
+                {sessionDetails.status === 'pending' && sessionDetails.role === 'proposer' && (
+                  <div className="info-row">
+                    <strong>Waiting for:</strong>
+                    <span>{sessionDetails.partner?.displayName || 'Partner'} to respond to your request</span>
+                  </div>
+                )}
+                {sessionDetails.respondedAt && (
+                  <div className="info-row">
+                    <strong>Response Date:</strong>
+                    <span>{new Date(sessionDetails.respondedAt).toLocaleString()}</span>
+                  </div>
+                )}
               </div>
             </div>
 

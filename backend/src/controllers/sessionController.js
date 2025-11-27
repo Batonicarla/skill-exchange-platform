@@ -235,46 +235,59 @@ const getSessionDetails = async (req, res) => {
     const { sessionId } = req.params;
     const userId = req.user.uid;
 
-    const sessionDoc = await db.collection('sessions').doc(sessionId).get();
+    // Get session from Supabase
+    const { data: sessionData, error: sessionError } = await supabase
+      .from('sessions')
+      .select('*')
+      .eq('id', sessionId)
+      .single();
 
-    if (!sessionDoc.exists) {
+    if (sessionError || !sessionData) {
       return res.status(404).json({
         success: false,
         message: 'Session not found'
       });
     }
 
-    const sessionData = sessionDoc.data();
-
     // Check if user is part of this session
-    if (sessionData.proposerId !== userId && sessionData.partnerId !== userId) {
+    if (sessionData.proposer_id !== userId && sessionData.partner_id !== userId) {
       return res.status(403).json({
         success: false,
         message: 'Access denied'
       });
     }
 
-    // Get partner info
-    const partnerId = sessionData.proposerId === userId 
-      ? sessionData.partnerId 
-      : sessionData.proposerId;
+    // Determine user's role and get partner info
+    const isProposer = sessionData.proposer_id === userId;
+    const partnerId = isProposer ? sessionData.partner_id : sessionData.proposer_id;
 
-    const partnerDoc = await db.collection('users').doc(partnerId).get();
-    const partnerData = partnerDoc.exists ? partnerDoc.data() : null;
+    // Get partner details
+    const { data: partnerData } = await supabase
+      .from('users')
+      .select('uid, display_name, email, bio, photo_url')
+      .eq('uid', partnerId)
+      .single();
 
     res.json({
       success: true,
       data: {
-        sessionId: sessionDoc.id,
-        ...sessionData,
-        sessionDateTime: sessionData.sessionDateTime?.toDate(),
-        createdAt: sessionData.createdAt?.toDate(),
-        updatedAt: sessionData.updatedAt?.toDate(),
+        sessionId: sessionData.id,
+        skill: sessionData.skill,
+        proposedDate: sessionData.proposed_date,
+        proposedTime: sessionData.proposed_time,
+        notes: sessionData.notes,
+        status: sessionData.status,
+        createdAt: sessionData.created_at,
+        respondedAt: sessionData.responded_at,
+        role: isProposer ? 'proposer' : 'partner',
+        proposerId: sessionData.proposer_id,
+        partnerId: sessionData.partner_id,
         partner: partnerData ? {
-          uid: partnerId,
-          displayName: partnerData.displayName,
+          uid: partnerData.uid,
+          displayName: partnerData.display_name,
           email: partnerData.email,
-          photoURL: partnerData.photoURL
+          bio: partnerData.bio,
+          photoURL: partnerData.photo_url
         } : null
       }
     });
@@ -295,20 +308,22 @@ const cancelSession = async (req, res) => {
     const { sessionId } = req.params;
     const userId = req.user.uid;
 
-    const sessionRef = db.collection('sessions').doc(sessionId);
-    const sessionDoc = await sessionRef.get();
+    // Get session from Supabase
+    const { data: sessionData, error: sessionError } = await supabase
+      .from('sessions')
+      .select('*')
+      .eq('id', sessionId)
+      .single();
 
-    if (!sessionDoc.exists) {
+    if (sessionError || !sessionData) {
       return res.status(404).json({
         success: false,
         message: 'Session not found'
       });
     }
 
-    const sessionData = sessionDoc.data();
-
     // Check if user is part of this session
-    if (sessionData.proposerId !== userId && sessionData.partnerId !== userId) {
+    if (sessionData.proposer_id !== userId && sessionData.partner_id !== userId) {
       return res.status(403).json({
         success: false,
         message: 'Access denied'
@@ -322,12 +337,16 @@ const cancelSession = async (req, res) => {
       });
     }
 
-    await sessionRef.update({
-      status: 'cancelled',
-      updatedAt: new Date(),
-      cancelledAt: new Date(),
-      cancelledBy: userId
-    });
+    const { error: updateError } = await supabase
+      .from('sessions')
+      .update({
+        status: 'cancelled',
+        cancelled_at: new Date().toISOString(),
+        cancelled_by: userId
+      })
+      .eq('id', sessionId);
+
+    if (updateError) throw updateError;
 
     res.json({
       success: true,
