@@ -64,6 +64,11 @@
   cursor: pointer;
   color: #ddd;
   transition: color 0.2s;
+  padding: 4px;
+  margin: 0 2px;
+  outline: none;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
 }
 
 .star.active {
@@ -72,6 +77,16 @@
 
 .star:hover {
   color: #ffc107;
+  transform: scale(1.1);
+}
+
+.star:focus {
+  outline: 2px solid #ffc107;
+  outline-offset: 2px;
+}
+
+.star:active {
+  transform: scale(0.95);
 }
 
 .form-group {
@@ -99,4 +114,36 @@
   display: flex;
   gap: 12px;
   justify-content: flex-end;
+}
+
+.modal-actions .btn {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+
+.modal-actions .btn-secondary {
+  background: var(--color-border);
+  color: var(--color-text);
+}
+
+.modal-actions .btn-secondary:hover {
+  background: var(--color-text-muted);
+}
+
+.modal-actions .btn-primary {
+  background: #007bff;
+  color: white;
+}
+
+.modal-actions .btn-primary:hover {
+  background: #0056b3;
+}
+
+.modal-actions .btn-primary:disabled {
+  background: #6c757d;
+  cursor: not-allowed;
 }

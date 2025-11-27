@@ -9,10 +9,22 @@ const RatingModal = ({ session, onClose, onSubmit }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (rating === 0) return;
+    console.log('Form submitted with rating:', rating);
+    
+    if (rating === 0) {
+      alert('Please select a rating before submitting.');
+      return;
+    }
 
     setLoading(true);
     try {
+      console.log('Submitting rating:', {
+        sessionId: session.sessionId,
+        ratedUserId: session.partnerId,
+        rating,
+        review
+      });
+      
       const response = await api.post('/ratings/submit', {
         sessionId: session.sessionId,
         ratedUserId: session.partnerId,
@@ -20,7 +32,10 @@ const RatingModal = ({ session, onClose, onSubmit }) => {
         review
       });
 
+      console.log('Rating response:', response.data);
+      
       if (response.data.success) {
+        alert('Rating submitted successfully!');
         onSubmit();
         onClose();
       }
@@ -47,19 +62,28 @@ const RatingModal = ({ session, onClose, onSubmit }) => {
 
         <form onSubmit={handleSubmit}>
           <div className="rating-section">
-            <label>Rating</label>
+            <label>Rating (1-5 stars)</label>
             <div className="stars">
               {[1, 2, 3, 4, 5].map((star) => (
                 <button
                   key={star}
                   type="button"
                   className={`star ${star <= rating ? 'active' : ''}`}
-                  onClick={() => setRating(star)}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    console.log('Star clicked:', star);
+                    setRating(star);
+                  }}
+                  onMouseEnter={() => console.log('Star hover:', star)}
                 >
                   ★
                 </button>
               ))}
             </div>
+            <p style={{fontSize: '12px', color: 'var(--color-text-muted)', marginTop: '8px'}}>
+              Current rating: {rating}/5
+            </p>
           </div>
 
           <div className="form-group">
@@ -80,6 +104,10 @@ const RatingModal = ({ session, onClose, onSubmit }) => {
               type="submit" 
               className="btn btn-primary" 
               disabled={rating === 0 || loading}
+              onClick={(e) => {
+                console.log('Submit button clicked');
+                // Let the form handle the submission
+              }}
             >
               {loading ? 'Submitting...' : 'Submit Rating'}
             </button>
