@@ -117,12 +117,19 @@ const Sessions = () => {
       if (response.data.success) {
         const newStatus = action === 'confirm' ? 'confirmed' : 'rejected';
         
-        // Immediately update local state for instant UI feedback
+        // Immediately update session details
         setSessionDetails(prev => ({
           ...prev,
           status: newStatus,
           respondedAt: new Date().toISOString()
         }));
+        
+        // Immediately update sessions list
+        setSessions(prev => prev.map(session => 
+          session.sessionId === sessionId 
+            ? { ...session, status: newStatus }
+            : session
+        ));
         
         if (action === 'confirm') {
           setMessage('🎉 Session confirmed! You can now chat to coordinate the session details.');
@@ -130,7 +137,7 @@ const Sessions = () => {
           setMessage('Session declined.');
         }
         
-        // Only refresh sessions list, not session details to avoid overwriting local state
+        // Refresh sessions list in background
         fetchSessions();
       }
     } catch (error) {
