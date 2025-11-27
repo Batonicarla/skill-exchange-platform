@@ -179,25 +179,20 @@ const markAsRead = async (req, res) => {
     const userId = req.user.uid;
 
     const chatId = [userId, partnerId].sort().join('_');
-    const messagesRef = db.collection('chats').doc(chatId).collection('messages');
     
-    // Get unread messages
-    const snapshot = await messagesRef
-      .where('receiverId', '==', userId)
-      .where('read', '==', false)
-      .get();
+    // Update unread messages
+    const { error } = await supabase
+      .from('messages')
+      .update({ read: true })
+      .eq('chat_id', chatId)
+      .eq('receiver_id', userId)
+      .eq('read', false);
 
-    const batch = db.batch();
-    snapshot.forEach(doc => {
-      batch.update(doc.ref, { read: true });
-    });
-
-    await batch.commit();
+    if (error) throw error;
 
     res.json({
       success: true,
-      message: 'Messages marked as read',
-      count: snapshot.size
+      message: 'Messages marked as read'
     });
   } catch (error) {
     console.error('Mark as read error:', error);
