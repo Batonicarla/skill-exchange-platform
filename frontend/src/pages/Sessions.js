@@ -74,7 +74,7 @@ const Sessions = () => {
     if (sessionId) {
       fetchSessionDetails();
     }
-  }, [sessionId, fetchSessionDetails]);
+  }, [sessionId]);
 
   const handleProposeSession = async (e) => {
     e.preventDefault();
@@ -150,10 +150,8 @@ const Sessions = () => {
       const response = await api.put(`/sessions/${sessionId}/cancel`);
       if (response.data.success) {
         setMessage('Session cancelled successfully!');
+        setSessionDetails(prev => ({ ...prev, status: 'cancelled' }));
         fetchSessions();
-        if (sessionDetails) {
-          fetchSessionDetails();
-        }
       }
     } catch (error) {
       setMessage(error.response?.data?.message || 'Error cancelling session');
