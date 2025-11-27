@@ -505,14 +505,7 @@ const Sessions = () => {
                         {isTeaching ? '👨‍🏫 Teaching' : '👨‍🎓 Learning'}
                       </span>
                     </div>
-                    {session.status === 'rejected' && (
-                      <span
-                        className="session-status"
-                        style={{ backgroundColor: getStatusColor(session.status) }}
-                      >
-                        {session.status.toUpperCase()}
-                      </span>
-                    )}
+
                   </div>
                   
                   <div className="session-card-info">
@@ -576,15 +569,7 @@ const Sessions = () => {
                       </button>
                     )}
                     
-                    {session.status === 'pending' && session.role === 'proposer' && (
-                      <span className="waiting-indicator" style={{ 
-                        color: 'var(--color-text-muted)', 
-                        fontSize: '12px',
-                        fontStyle: 'italic'
-                      }}>
-                        Waiting for response...
-                      </span>
-                    )}
+
                   </div>
                 </div>
               );
