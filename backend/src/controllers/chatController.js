@@ -49,14 +49,16 @@ const sendMessage = async (req, res) => {
 
     console.log('Message inserted:', messageData);
 
-    // Upsert chat (create or update)
+    // Ensure chat exists (create or update)
     const { error: chatError } = await supabase
       .from('chats')
       .upsert({
         id: chatId,
         participants: [senderId, receiverId],
         last_message: message.trim(),
-        last_message_time: new Date().toISOString()
+        last_message_time: new Date().toISOString(),
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
       }, {
         onConflict: 'id'
       });

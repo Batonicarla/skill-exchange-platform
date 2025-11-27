@@ -114,6 +114,7 @@ CREATE POLICY "Users can insert own profile" ON users FOR INSERT WITH CHECK (aut
 
 CREATE POLICY "Users can view own chats" ON chats FOR SELECT USING (auth.uid() = ANY(participants));
 CREATE POLICY "Users can create chats" ON chats FOR INSERT WITH CHECK (auth.uid() = ANY(participants));
+CREATE POLICY "Users can update own chats" ON chats FOR UPDATE USING (auth.uid() = ANY(participants));
 
 CREATE POLICY "Users can view own messages" ON messages FOR SELECT USING (auth.uid() = sender_id OR auth.uid() = receiver_id);
 CREATE POLICY "Users can send messages" ON messages FOR INSERT WITH CHECK (auth.uid() = sender_id);
