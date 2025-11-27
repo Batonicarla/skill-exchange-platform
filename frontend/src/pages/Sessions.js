@@ -496,15 +496,14 @@ const Sessions = () => {
                         {isTeaching ? '👨‍🏫 Teaching' : '👨‍🎓 Learning'}
                       </span>
                     </div>
-                    <span
-                      className="session-status"
-                      style={{ 
-                        backgroundColor: getStatusColor(session.status),
-                        display: session.status === 'confirmed' ? 'none' : 'block'
-                      }}
-                    >
-                      {session.status.toUpperCase()}
-                    </span>
+                    {session.status !== 'confirmed' && (
+                      <span
+                        className="session-status"
+                        style={{ backgroundColor: getStatusColor(session.status) }}
+                      >
+                        {session.status.toUpperCase()}
+                      </span>
+                    )}
                   </div>
                   
                   <div className="session-card-info">
