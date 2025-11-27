@@ -108,45 +108,56 @@ const ManagedChats = () => {
     };
   }, []);
 
-  // Show chats list if no partner selected
-  if (!partnerId) {
-    return (
-      <div style={{ padding: '20px' }}>
-        <h2 style={{ color: 'var(--color-text)', marginBottom: '20px' }}>Messages</h2>
+  // Show chats with sidebar layout
+  return (
+    <div style={{ 
+      height: 'calc(100vh - 80px)', 
+      display: 'flex',
+      backgroundColor: 'var(--color-background)'
+    }}>
+      {/* Sidebar - Conversations List */}
+      <div style={{
+        width: '320px',
+        backgroundColor: 'var(--color-surface)',
+        borderRight: '1px solid var(--color-border)',
+        display: 'flex',
+        flexDirection: 'column'
+      }}>
+        <div style={{
+          padding: '20px',
+          borderBottom: '1px solid var(--color-border)'
+        }}>
+          <h2 style={{ margin: '0 0 16px 0', color: 'var(--color-text)' }}>💬 Messages</h2>
+          <button 
+            onClick={() => navigate('/matches')}
+            style={{
+              width: '100%',
+              padding: '8px 16px',
+              backgroundColor: 'var(--color-primary)',
+              color: 'white',
+              border: 'none',
+              borderRadius: '8px',
+              cursor: 'pointer',
+              fontSize: '14px'
+            }}
+          >
+            + New Chat
+          </button>
+        </div>
         
-        {chats.length === 0 ? (
-          <div style={{ 
-            textAlign: 'center', 
-            padding: '60px 20px',
-            backgroundColor: 'var(--color-surface)',
-            borderRadius: '12px',
-            border: '1px solid var(--color-border)'
-          }}>
-            <p style={{ color: 'var(--color-text-muted)', marginBottom: '20px' }}>
-              No conversations yet
-            </p>
-            <button 
-              onClick={() => navigate('/matches')}
-              style={{
-                padding: '12px 24px',
-                backgroundColor: '#6b7280',
-                color: 'white',
-                border: 'none',
-                borderRadius: '8px',
-                cursor: 'pointer'
-              }}
-            >
-              Find Matches to Chat
-            </button>
-          </div>
-        ) : (
-          <div style={{
-            backgroundColor: 'var(--color-surface)',
-            borderRadius: '12px',
-            border: '1px solid var(--color-border)',
-            overflow: 'hidden'
-          }}>
-            {chats.map((chat) => (
+        <div style={{ flex: 1, overflowY: 'auto' }}>
+          {chats.length === 0 ? (
+            <div style={{ 
+              textAlign: 'center', 
+              padding: '40px 20px',
+              color: 'var(--color-text-muted)'
+            }}>
+              <div style={{ fontSize: '48px', marginBottom: '16px' }}>💬</div>
+              <p>No conversations yet</p>
+              <p style={{ fontSize: '14px' }}>Find matches to start chatting!</p>
+            </div>
+          ) : (
+            chats.map((chat) => (
               <div
                 key={chat.chatId}
                 onClick={() => navigate(`/chats/${chat.partner?.uid}`)}
@@ -156,10 +167,19 @@ const ManagedChats = () => {
                   padding: '16px 20px',
                   cursor: 'pointer',
                   borderBottom: '1px solid var(--color-border)',
+                  backgroundColor: partnerId === chat.partner?.uid ? 'var(--color-primary-light)' : 'transparent',
                   transition: 'background 0.2s'
                 }}
-                onMouseEnter={(e) => e.target.style.backgroundColor = 'var(--color-surface-alt)'}
-                onMouseLeave={(e) => e.target.style.backgroundColor = 'transparent'}
+                onMouseEnter={(e) => {
+                  if (partnerId !== chat.partner?.uid) {
+                    e.currentTarget.style.backgroundColor = 'var(--color-surface-alt)';
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (partnerId !== chat.partner?.uid) {
+                    e.currentTarget.style.backgroundColor = 'transparent';
+                  }
+                }}
               >
                 <div style={{
                   width: '48px',
@@ -203,21 +223,56 @@ const ManagedChats = () => {
                   {chat.lastMessageTime && formatTime(chat.lastMessageTime)}
                 </div>
               </div>
-            ))}
+            ))
+          )}
+        </div>
+      </div>
+      
+      {/* Main Chat Area */}
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+        {!partnerId ? (
+          <div style={{
+            flex: 1,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            color: 'var(--color-text-muted)',
+            textAlign: 'center'
+          }}>
+            <div>
+              <div style={{ fontSize: '64px', marginBottom: '16px' }}>💬</div>
+              <h3 style={{ margin: '0 0 8px 0' }}>Select a conversation</h3>
+              <p>Choose a chat from the sidebar to start messaging</p>
+            </div>
           </div>
+        ) : (
+          <ChatInterface 
+            partnerId={partnerId}
+            partner={partner}
+            messages={messages}
+            newMessage={newMessage}
+            setNewMessage={setNewMessage}
+            handleSendMessage={handleSendMessage}
+            loading={loading}
+            userData={userData}
+            formatTime={formatTime}
+            navigate={navigate}
+          />
         )}
       </div>
-    );
-  }
+    </div>
+  );
 
-  // Show chat interface
+// Chat Interface Component
+const ChatInterface = ({ partnerId, partner, messages, newMessage, setNewMessage, handleSendMessage, loading, userData, formatTime, navigate }) => {
+  const messagesEndRef = useRef(null);
+  
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
+  
   return (
-    <div style={{ 
-      height: 'calc(100vh - 80px)', 
-      display: 'flex', 
-      flexDirection: 'column',
-      backgroundColor: 'var(--color-background)'
-    }}>
+    <>
       {/* Header */}
       <div style={{
         padding: '16px 20px',
@@ -226,19 +281,20 @@ const ManagedChats = () => {
         display: 'flex',
         alignItems: 'center'
       }}>
-        <button 
-          onClick={() => navigate('/chats')}
-          style={{
-            background: 'none',
-            border: 'none',
-            color: 'var(--color-text)',
-            cursor: 'pointer',
-            marginRight: '16px',
-            fontSize: '16px'
-          }}
-        >
-          ← Back
-        </button>
+        <div style={{
+          width: '40px',
+          height: '40px',
+          borderRadius: '50%',
+          backgroundColor: '#6b7280',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          color: 'white',
+          fontWeight: '600',
+          marginRight: '12px'
+        }}>
+          {partner?.displayName?.charAt(0) || '?'}
+        </div>
         <h3 style={{ margin: 0, color: 'var(--color-text)' }}>
           {partner?.displayName || partner?.display_name || 'Chat'}
         </h3>
@@ -259,7 +315,8 @@ const ManagedChats = () => {
           </div>
         ) : messages.length === 0 ? (
           <div style={{ textAlign: 'center', color: 'var(--color-text-muted)' }}>
-            No messages yet. Start the conversation!
+            <div style={{ fontSize: '48px', marginBottom: '16px' }}>👋</div>
+            <p>No messages yet. Start the conversation!</p>
           </div>
         ) : (
           messages.map((msg, idx) => {
@@ -278,9 +335,10 @@ const ManagedChats = () => {
                     maxWidth: '70%',
                     padding: '12px 16px',
                     borderRadius: '18px',
-                    backgroundColor: isOwn ? '#6b7280' : 'var(--color-surface-alt)',
+                    backgroundColor: isOwn ? '#6b7280' : 'var(--color-surface)',
                     color: isOwn ? 'white' : 'var(--color-text)',
-                    wordWrap: 'break-word'
+                    wordWrap: 'break-word',
+                    border: isOwn ? 'none' : '1px solid var(--color-border)'
                   }}
                 >
                   <p style={{ margin: '0 0 4px 0' }}>{msg.message}</p>
@@ -334,11 +392,12 @@ const ManagedChats = () => {
             opacity: newMessage.trim() ? 1 : 0.5
           }}
         >
-          Send
+          📤 Send
         </button>
       </form>
-    </div>
+    </>
   );
+};
 };
 
 export default ManagedChats;

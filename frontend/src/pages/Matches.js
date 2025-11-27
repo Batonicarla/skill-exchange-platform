@@ -89,14 +89,20 @@ const Matches = () => {
                     View Profile
                   </Link>
                   <Link to={`/chats/${match.uid}`} className="btn btn-secondary">
-                    Message
+                    💬 Message
                   </Link>
-                  <Link 
-                    to={`/sessions?propose=true&email=${encodeURIComponent(match.email || match.user_email || '')}&name=${encodeURIComponent(match.displayName || match.display_name || '')}`}
+                  <button
+                    onClick={() => {
+                      setSelectedMatch({
+                        partnerId: match.uid,
+                        sessionId: 'general-rating'
+                      });
+                      setShowRatingModal(true);
+                    }}
                     className="btn btn-accent"
                   >
-                    Propose Session
-                  </Link>
+                    ⭐ Rate
+                  </button>
                 </div>
               </div>
             ))}
