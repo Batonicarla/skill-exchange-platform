@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useParams, useNavigate, useLocation, Link } from 'react-router-dom';
 import api from '../services/api';
 import RatingModal from '../components/RatingModal';
 import './Sessions.css';
@@ -7,6 +7,7 @@ import './Sessions.css';
 const Sessions = () => {
   const { sessionId } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const [sessions, setSessions] = useState([]);
   const [sessionDetails, setSessionDetails] = useState(null);
   const [showProposeForm, setShowProposeForm] = useState(false);
@@ -51,7 +52,23 @@ const Sessions = () => {
 
   useEffect(() => {
     fetchSessions();
-  }, [fetchSessions]);
+    
+    // Check URL parameters for auto-opening propose form
+    const urlParams = new URLSearchParams(location.search);
+    const shouldPropose = urlParams.get('propose');
+    const email = urlParams.get('email');
+    const name = urlParams.get('name');
+    
+    if (shouldPropose === 'true') {
+      setShowProposeForm(true);
+      if (email) {
+        setProposeData(prev => ({
+          ...prev,
+          partnerEmail: decodeURIComponent(email)
+        }));
+      }
+    }
+  }, [fetchSessions, location.search]);
 
   useEffect(() => {
     if (sessionId) {
@@ -100,11 +117,15 @@ const Sessions = () => {
       if (response.data.success) {
         setMessage(response.data.message);
         
-        // Small delay to ensure backend update completes
+        // Force immediate refresh of session details
         setTimeout(async () => {
           await fetchSessionDetails();
           await fetchSessions();
-        }, 500);
+          // Clear message after successful update
+          if (action === 'confirm') {
+            setTimeout(() => setMessage(''), 3000);
+          }
+        }, 100);
         
         // If session was confirmed, show success message for longer
         if (action === 'confirm') {
@@ -185,7 +206,7 @@ const Sessions = () => {
                 className="status-badge"
                 style={{ backgroundColor: getStatusColor(sessionDetails.status) }}
               >
-                {sessionDetails.status.toUpperCase()}
+                {sessionDetails.status?.toUpperCase() || 'UNKNOWN'}
               </span>
             </div>
             
@@ -266,6 +287,12 @@ const Sessions = () => {
                   <div className="info-row">
                     <strong>Waiting for:</strong>
                     <span>{sessionDetails.partner?.displayName || 'Partner'} to respond to your request</span>
+                  </div>
+                )}
+                {sessionDetails.status === 'confirmed' && (
+                  <div className="info-row">
+                    <strong>Status:</strong>
+                    <span style={{ color: '#22c55e', fontWeight: 'bold' }}>✅ Session Confirmed! Ready to start learning.</span>
                   </div>
                 )}
                 {sessionDetails.respondedAt && (

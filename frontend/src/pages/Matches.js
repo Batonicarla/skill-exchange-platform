@@ -92,7 +92,7 @@ const Matches = () => {
                     Message
                   </Link>
                   <Link 
-                    to={`/sessions/propose/${match.uid}`}
+                    to={`/sessions?propose=true&email=${encodeURIComponent(match.email || match.user_email || '')}&name=${encodeURIComponent(match.displayName || match.display_name || '')}`}
                     className="btn btn-accent"
                   >
                     Propose Session
