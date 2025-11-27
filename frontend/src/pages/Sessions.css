@@ -181,13 +181,43 @@
 }
 
 .status-badge {
-  padding: 8px 16px;
+  padding: 6px 12px;
   border-radius: 999px;
   color: white;
-  font-size: 12px;
+  font-size: 11px;
   font-weight: bold;
   text-transform: uppercase;
-  letter-spacing: 1px;
+  letter-spacing: 0.5px;
+}
+
+.status-pending {
+  background: #f59e0b;
+}
+
+.status-confirmed {
+  background: #10b981;
+}
+
+.status-completed {
+  background: #6366f1;
+}
+
+.status-rejected {
+  background: #ef4444;
+}
+
+.status-cancelled {
+  background: #6b7280;
+}
+
+.btn-success {
+  background: #10b981;
+  color: white;
+  border: none;
+}
+
+.btn-success:hover {
+  background: #059669;
 }
 
 .info-section {
@@ -261,6 +291,26 @@
 .session-actions {
   display: flex;
   gap: 10px;
+}
+
+.rating-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  background: #f0f9ff;
+  color: #0369a1;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  border: 1px solid #bae6fd;
+}
+
+.rating-completed {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px;
 }
 
 @media (max-width: 768px) {

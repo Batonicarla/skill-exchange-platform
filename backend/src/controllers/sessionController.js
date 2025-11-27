@@ -433,11 +433,142 @@ const cancelSession = async (req, res) => {
   }
 };
 
+/**
+ * Mark a session as completed
+ */
+const completeSession = async (req, res) => {
+  try {
+    const { sessionId } = req.params;
+    const userId = req.user.uid;
+
+    // Get session from Supabase
+    const { data: sessionData, error: sessionError } = await supabase
+      .from('sessions')
+      .select('*')
+      .eq('id', sessionId)
+      .single();
+
+    if (sessionError || !sessionData) {
+      return res.status(404).json({
+        success: false,
+        message: 'Session not found'
+      });
+    }
+
+    // Check if user is part of this session
+    if (sessionData.proposer_id !== userId && sessionData.partner_id !== userId) {
+      return res.status(403).json({
+        success: false,
+        message: 'Access denied'
+      });
+    }
+
+    if (sessionData.status !== 'confirmed') {
+      return res.status(400).json({
+        success: false,
+        message: 'Only confirmed sessions can be marked as completed'
+      });
+    }
+
+    const { error: updateError } = await supabase
+      .from('sessions')
+      .update({
+        status: 'completed',
+        completed_at: new Date().toISOString()
+      })
+      .eq('id', sessionId);
+
+    if (updateError) throw updateError;
+
+    res.json({
+      success: true,
+      message: 'Session marked as completed! You can now rate your partner.'
+    });
+  } catch (error) {
+    console.error('Complete session error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error completing session'
+    });
+  }
+};
+
+/**
+ * Check if user can rate a session
+ */
+const canRateSession = async (req, res) => {
+  try {
+    const { sessionId } = req.params;
+    const userId = req.user.uid;
+
+    // Get session from Supabase
+    const { data: sessionData, error: sessionError } = await supabase
+      .from('sessions')
+      .select('*')
+      .eq('id', sessionId)
+      .single();
+
+    if (sessionError || !sessionData) {
+      return res.status(404).json({
+        success: false,
+        message: 'Session not found'
+      });
+    }
+
+    // Check if user is part of this session
+    if (sessionData.proposer_id !== userId && sessionData.partner_id !== userId) {
+      return res.status(403).json({
+        success: false,
+        message: 'Access denied'
+      });
+    }
+
+    // Check if session is completed
+    if (sessionData.status !== 'completed') {
+      return res.json({
+        success: false,
+        canRate: false,
+        message: 'Session must be completed before rating'
+      });
+    }
+
+    // Check if user has already rated this session
+    const { data: existingRating } = await supabase
+      .from('ratings')
+      .select('id')
+      .eq('session_id', sessionId)
+      .eq('rater_id', userId)
+      .single();
+
+    if (existingRating) {
+      return res.json({
+        success: true,
+        canRate: false,
+        message: 'You have already rated this session'
+      });
+    }
+
+    res.json({
+      success: true,
+      canRate: true,
+      message: 'You can rate this session'
+    });
+  } catch (error) {
+    console.error('Can rate session error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error checking rating eligibility'
+    });
+  }
+};
+
 module.exports = {
   proposeSession,
   respondToSession,
   getUserSessions,
   getSessionDetails,
-  cancelSession
+  cancelSession,
+  completeSession,
+  canRateSession
 };
 

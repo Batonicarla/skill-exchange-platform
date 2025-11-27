@@ -22,12 +22,29 @@ const Sessions = () => {
   const [message, setMessage] = useState('');
   const [showRatingModal, setShowRatingModal] = useState(false);
   const [selectedSession, setSelectedSession] = useState(null);
+  const [ratingEligibility, setRatingEligibility] = useState({});
 
   const fetchSessions = useCallback(async () => {
     try {
       const response = await api.get('/sessions');
       if (response.data.success) {
         setSessions(response.data.data);
+        
+        // Check rating eligibility for completed sessions
+        const completedSessions = response.data.data.filter(s => s.status === 'completed');
+        const eligibilityChecks = {};
+        
+        for (const session of completedSessions) {
+          try {
+            const ratingResponse = await api.get(`/sessions/${session.sessionId}/can-rate`);
+            eligibilityChecks[session.sessionId] = ratingResponse.data;
+          } catch (error) {
+            console.error(`Error checking rating eligibility for session ${session.sessionId}:`, error);
+            eligibilityChecks[session.sessionId] = { canRate: false };
+          }
+        }
+        
+        setRatingEligibility(eligibilityChecks);
       }
     } catch (error) {
       console.error('Error fetching sessions:', error);
@@ -42,6 +59,23 @@ const Sessions = () => {
       const response = await api.get(`/sessions/${sessionId}`);
       if (response.data.success) {
         setSessionDetails(response.data.data);
+        
+        // Check rating eligibility if session is completed
+        if (response.data.data.status === 'completed') {
+          try {
+            const ratingResponse = await api.get(`/sessions/${sessionId}/can-rate`);
+            setRatingEligibility(prev => ({
+              ...prev,
+              [sessionId]: ratingResponse.data
+            }));
+          } catch (error) {
+            console.error('Error checking rating eligibility:', error);
+            setRatingEligibility(prev => ({
+              ...prev,
+              [sessionId]: { canRate: false }
+            }));
+          }
+        }
       }
     } catch (error) {
       console.error('Error fetching session details:', error);
@@ -172,6 +206,31 @@ const Sessions = () => {
       }
     } catch (error) {
       setMessage(error.response?.data?.message || 'Error cancelling session');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleCompleteSession = async (sessionId) => {
+    if (!window.confirm('Mark this session as completed? You will then be able to rate your partner.')) return;
+
+    setLoading(true);
+    setMessage('');
+
+    try {
+      const response = await api.put(`/sessions/${sessionId}/complete`);
+      if (response.data.success) {
+        setMessage('Session marked as completed! You can now rate your partner.');
+        setSessionDetails(prev => ({ ...prev, status: 'completed', completed_at: new Date().toISOString() }));
+        setSessions(prev => prev.map(session => 
+          session.sessionId === sessionId 
+            ? { ...session, status: 'completed' }
+            : session
+        ));
+        fetchSessions();
+      }
+    } catch (error) {
+      setMessage(error.response?.data?.message || 'Error completing session');
     } finally {
       setLoading(false);
     }
@@ -322,17 +381,37 @@ const Sessions = () => {
                     💬 Start Chatting
                   </Link>
                   <button
-                    onClick={() => {
-                      setSelectedSession({
-                        sessionId: sessionDetails.sessionId || sessionId,
-                        partnerId: sessionDetails.role === 'proposer' ? sessionDetails.partnerId : sessionDetails.proposerId
-                      });
-                      setShowRatingModal(true);
-                    }}
-                    className="btn btn-accent"
+                    onClick={() => handleCompleteSession(sessionId)}
+                    className="btn btn-success"
+                    disabled={loading}
                   >
-                    ⭐ Rate Session
+                    ✅ Mark as Completed
                   </button>
+                </div>
+              )}
+
+              {sessionDetails.status === 'completed' && (
+                <div className="action-group">
+                  <h4>✅ Session Completed!</h4>
+                  <p>Great job! You can now rate your learning partner to help build trust in the community.</p>
+                  {ratingEligibility[sessionId]?.canRate ? (
+                    <button
+                      onClick={() => {
+                        setSelectedSession({
+                          sessionId: sessionDetails.sessionId || sessionId,
+                          partnerId: sessionDetails.role === 'proposer' ? sessionDetails.partnerId : sessionDetails.proposerId
+                        });
+                        setShowRatingModal(true);
+                      }}
+                      className="btn btn-accent"
+                    >
+                      ⭐ Rate Your Partner
+                    </button>
+                  ) : (
+                    <div className="rating-completed">
+                      <span className="rating-status">✅ You have already rated this session</span>
+                    </div>
+                  )}
                 </div>
               )}
 
@@ -536,26 +615,33 @@ const Sessions = () => {
                     </button>
                     
                     {session.status === 'confirmed' && (
-                      <>
-                        <Link
-                          to={`/chats/${session.role === 'proposer' ? session.partnerId : session.proposerId}`}
-                          className="btn btn-primary"
-                        >
-                          💬 Chat
-                        </Link>
-                        <button
-                          onClick={() => {
-                            setSelectedSession({
-                              sessionId: session.sessionId,
-                              partnerId: session.role === 'proposer' ? session.partnerId : session.proposerId
-                            });
-                            setShowRatingModal(true);
-                          }}
-                          className="btn btn-accent"
-                        >
-                          ⭐ Rate
-                        </button>
-                      </>
+                      <Link
+                        to={`/chats/${session.role === 'proposer' ? session.partnerId : session.proposerId}`}
+                        className="btn btn-primary"
+                      >
+                        💬 Chat
+                      </Link>
+                    )}
+                    
+                    {session.status === 'completed' && ratingEligibility[session.sessionId]?.canRate && (
+                      <button
+                        onClick={() => {
+                          setSelectedSession({
+                            sessionId: session.sessionId,
+                            partnerId: session.role === 'proposer' ? session.partnerId : session.proposerId
+                          });
+                          setShowRatingModal(true);
+                        }}
+                        className="btn btn-accent"
+                      >
+                        ⭐ Rate Partner
+                      </button>
+                    )}
+                    
+                    {session.status === 'completed' && !ratingEligibility[session.sessionId]?.canRate && (
+                      <span className="rating-status">
+                        ✅ Already Rated
+                      </span>
                     )}
                     
                     {session.status === 'pending' && session.role === 'partner' && (
@@ -584,7 +670,10 @@ const Sessions = () => {
             }}
             onSubmit={() => {
               setMessage('Rating submitted successfully!');
-              fetchSessions();
+              fetchSessions(); // This will refresh rating eligibility
+              if (sessionId) {
+                fetchSessionDetails(); // Refresh session details and rating eligibility
+              }
             }}
           />
         )}

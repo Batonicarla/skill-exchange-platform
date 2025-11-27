@@ -115,8 +115,25 @@ skill-exchange-platform/
 │   └── package.json
 ├── database/
 │   └── schema.sql           # Database schema
+├── docs/                     # Project documentation
+│   ├── README.md            # Documentation index
+│   ├── PROJECT_PROPOSAL.md  # Project proposal
+│   ├── SRS.md               # Software Requirements Specification
+│   ├── ARCHITECTURE.md      # System architecture
+│   └── API_REFERENCE.md     # API documentation
 └── README.md
 ```
+
+## 📚 Documentation
+
+Comprehensive project documentation is available in the [`docs/`](./docs/) folder:
+
+- **[Project Proposal](./docs/PROJECT_PROPOSAL.md)** - Mission, problem statement, and solution approach
+- **[Software Requirements Specification (SRS)](./docs/SRS.md)** - Detailed functional and non-functional requirements
+- **[Architecture Documentation](./docs/ARCHITECTURE.md)** - System design, components, and database schema
+- **[API Reference](./docs/API_REFERENCE.md)** - Complete REST API endpoint documentation
+
+For a quick overview, see the [Documentation Index](./docs/README.md).
 
 ## 🚀 Deployment
 
@@ -176,22 +193,26 @@ docker-compose up --build
 
 ## 📝 API Documentation
 
-### Authentication Endpoints
+For complete API documentation with request/response examples, see [API Reference](./docs/API_REFERENCE.md).
+
+### Quick Reference
+
+**Authentication:**
 - `POST /api/auth/register` - User registration
 - `POST /api/auth/login` - User login
 - `POST /api/auth/logout` - User logout
 
-### User Endpoints
+**Users:**
 - `GET /api/users/profile` - Get user profile
 - `PUT /api/users/profile` - Update user profile
 - `GET /api/users/search` - Search users by skills
 
-### Session Endpoints
+**Sessions:**
 - `POST /api/sessions` - Create session proposal
 - `GET /api/sessions` - Get user sessions
 - `PUT /api/sessions/:id` - Update session status
 
-### Chat Endpoints
+**Chat:**
 - `GET /api/chat/conversations` - Get user conversations
 - `POST /api/chat/messages` - Send message
 - `GET /api/chat/messages/:chatId` - Get chat messages

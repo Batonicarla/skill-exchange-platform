@@ -5,7 +5,9 @@ const {
   respondToSession,
   getUserSessions,
   getSessionDetails,
-  cancelSession
+  cancelSession,
+  completeSession,
+  canRateSession
 } = require('../controllers/sessionController');
 const { verifyToken } = require('../middleware/auth');
 const { sessionValidation } = require('../utils/validators');
@@ -19,6 +21,8 @@ router.put('/:sessionId/respond', respondToSession);
 router.get('/', getUserSessions);
 router.get('/:sessionId', getSessionDetails);
 router.put('/:sessionId/cancel', cancelSession);
+router.put('/:sessionId/complete', completeSession);
+router.get('/:sessionId/can-rate', canRateSession);
 
 module.exports = router;
 

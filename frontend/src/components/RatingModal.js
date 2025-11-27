@@ -15,7 +15,7 @@ const RatingModal = ({ session, onClose, onSubmit }) => {
     try {
       const response = await api.post('/ratings/submit', {
         sessionId: session.sessionId,
-        partnerId: session.partnerId,
+        ratedUserId: session.partnerId,
         rating,
         review
       });
@@ -26,6 +26,7 @@ const RatingModal = ({ session, onClose, onSubmit }) => {
       }
     } catch (error) {
       console.error('Rating error:', error);
+      alert(error.response?.data?.message || 'Error submitting rating');
     } finally {
       setLoading(false);
     }

@@ -53,6 +53,7 @@ export const AuthProvider = ({ children }) => {
   // Login
   const login = async (email, password) => {
     try {
+      console.log('API URL:', process.env.REACT_APP_API_URL);
       const response = await api.post('/auth/login', {
         email,
         password
