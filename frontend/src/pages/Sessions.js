@@ -130,8 +130,7 @@ const Sessions = () => {
           setMessage('Session declined.');
         }
         
-        // Refresh data in background
-        fetchSessionDetails();
+        // Only refresh sessions list, not session details to avoid overwriting local state
         fetchSessions();
       }
     } catch (error) {
