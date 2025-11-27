@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import api from '../services/api';
+import RatingModal from '../components/RatingModal';
 import './Sessions.css';
 
 const Sessions = () => {
@@ -10,7 +11,7 @@ const Sessions = () => {
   const [sessionDetails, setSessionDetails] = useState(null);
   const [showProposeForm, setShowProposeForm] = useState(false);
   const [proposeData, setProposeData] = useState({
-    partnerId: '',
+    partnerEmail: '',
     proposedDate: '',
     proposedTime: '',
     skill: '',
@@ -18,6 +19,8 @@ const Sessions = () => {
   });
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
+  const [showRatingModal, setShowRatingModal] = useState(false);
+  const [selectedSession, setSelectedSession] = useState(null);
 
   const fetchSessions = useCallback(async () => {
     try {
@@ -67,7 +70,7 @@ const Sessions = () => {
         setMessage('Session proposed successfully!');
         setShowProposeForm(false);
         setProposeData({
-          partnerId: '',
+          partnerEmail: '',
           proposedDate: '',
           proposedTime: '',
           skill: '',
@@ -214,6 +217,20 @@ const Sessions = () => {
                   Cancel Session
                 </button>
               )}
+              {sessionDetails.status === 'confirmed' && (
+                <button
+                  onClick={() => {
+                    setSelectedSession({
+                      sessionId: sessionDetails.sessionId || sessionId,
+                      partnerId: sessionDetails.partner?.uid
+                    });
+                    setShowRatingModal(true);
+                  }}
+                  className="btn btn-accent"
+                >
+                  Rate Session
+                </button>
+              )}
             </div>
           </div>
         </div>
@@ -243,14 +260,14 @@ const Sessions = () => {
             <h2>Propose a Session</h2>
             <form onSubmit={handleProposeSession}>
               <div className="form-group">
-                <label>Partner User ID</label>
+                <label>Partner Email</label>
                 <input
-                  type="text"
-                  value={proposeData.partnerId}
-                  onChange={(e) => setProposeData({ ...proposeData, partnerId: e.target.value })}
+                  type="email"
+                  value={proposeData.partnerEmail}
+                  onChange={(e) => setProposeData({ ...proposeData, partnerEmail: e.target.value })}
                   className="input"
                   required
-                  placeholder="Enter user ID"
+                  placeholder="Enter partner's email address"
                 />
               </div>
               <div className="form-group">
@@ -332,10 +349,38 @@ const Sessions = () => {
                   >
                     View Details
                   </button>
+                  {session.status === 'confirmed' && (
+                    <button
+                      onClick={() => {
+                        setSelectedSession({
+                          sessionId: session.sessionId,
+                          partnerId: session.role === 'proposer' ? session.partnerId : session.proposerId
+                        });
+                        setShowRatingModal(true);
+                      }}
+                      className="btn btn-accent"
+                    >
+                      Rate
+                    </button>
+                  )}
                 </div>
               </div>
             ))}
           </div>
+        )}
+        
+        {showRatingModal && selectedSession && (
+          <RatingModal
+            session={selectedSession}
+            onClose={() => {
+              setShowRatingModal(false);
+              setSelectedSession(null);
+            }}
+            onSubmit={() => {
+              setMessage('Rating submitted successfully!');
+              fetchSessions();
+            }}
+          />
         )}
       </div>
     </div>

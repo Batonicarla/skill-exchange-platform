@@ -1,4 +1,9 @@
-const { db } = require('../config/firebase');
+const { createClient } = require('@supabase/supabase-js');
+
+const supabase = createClient(
+  process.env.SUPABASE_URL,
+  process.env.SUPABASE_SERVICE_ROLE_KEY
+);
 
 /**
  * Submit a rating and review
@@ -31,23 +36,27 @@ const submitRating = async (req, res) => {
     }
 
     // Check if session exists and user participated
-    const sessionDoc = await db.collection('sessions').doc(sessionId).get();
-    if (!sessionDoc.exists) {
+    const { data: sessionData, error: sessionError } = await supabase
+      .from('sessions')
+      .select('*')
+      .eq('id', sessionId)
+      .single();
+
+    if (sessionError || !sessionData) {
       return res.status(404).json({
         success: false,
         message: 'Session not found'
       });
     }
 
-    const sessionData = sessionDoc.data();
-    if (sessionData.proposerId !== userId && sessionData.partnerId !== userId) {
+    if (sessionData.proposer_id !== userId && sessionData.partner_id !== userId) {
       return res.status(403).json({
         success: false,
         message: 'You did not participate in this session'
       });
     }
 
-    if (sessionData.proposerId !== partnerId && sessionData.partnerId !== partnerId) {
+    if (sessionData.proposer_id !== partnerId && sessionData.partner_id !== partnerId) {
       return res.status(400).json({
         success: false,
         message: 'Partner ID does not match session'
@@ -55,50 +64,52 @@ const submitRating = async (req, res) => {
     }
 
     // Check if user already rated this session
-    const existingRating = await db.collection('ratings')
-      .where('sessionId', '==', sessionId)
-      .where('raterId', '==', userId)
-      .get();
+    const { data: existingRating } = await supabase
+      .from('ratings')
+      .select('id')
+      .eq('session_id', sessionId)
+      .eq('rater_id', userId)
+      .single();
 
-    if (!existingRating.empty) {
+    if (existingRating) {
       return res.status(400).json({
         success: false,
         message: 'You have already rated this session'
       });
     }
 
-    // Create rating document
-    const ratingData = {
-      sessionId,
-      raterId: userId,
-      ratedUserId: partnerId,
-      rating: parseInt(rating),
-      review: review || '',
-      createdAt: new Date()
-    };
+    // Create rating
+    const { data: ratingData, error: ratingError } = await supabase
+      .from('ratings')
+      .insert({
+        session_id: sessionId,
+        rater_id: userId,
+        rated_user_id: partnerId,
+        rating: parseInt(rating),
+        review: review || ''
+      })
+      .select()
+      .single();
 
-    await db.collection('ratings').add(ratingData);
+    if (ratingError) throw ratingError;
 
     // Update partner's average rating
-    const partnerRatings = await db.collection('ratings')
-      .where('ratedUserId', '==', partnerId)
-      .get();
+    const { data: partnerRatings } = await supabase
+      .from('ratings')
+      .select('rating')
+      .eq('rated_user_id', partnerId);
 
-    let totalRating = 0;
-    let count = 0;
-
-    partnerRatings.forEach(doc => {
-      totalRating += doc.data().rating;
-      count++;
-    });
-
+    const totalRating = partnerRatings?.reduce((sum, r) => sum + r.rating, 0) || 0;
+    const count = partnerRatings?.length || 0;
     const averageRating = count > 0 ? totalRating / count : 0;
 
-    await db.collection('users').doc(partnerId).update({
-      rating: Math.round(averageRating * 10) / 10, // Round to 1 decimal
-      totalRatings: count,
-      updatedAt: new Date()
-    });
+    await supabase
+      .from('users')
+      .update({
+        rating: Math.round(averageRating * 10) / 10,
+        total_ratings: count
+      })
+      .eq('uid', partnerId);
 
     res.status(201).json({
       success: true,

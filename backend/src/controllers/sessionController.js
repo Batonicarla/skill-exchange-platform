@@ -1,4 +1,9 @@
-const { db } = require('../config/firebase');
+const { createClient } = require('@supabase/supabase-js');
+
+const supabase = createClient(
+  process.env.SUPABASE_URL,
+  process.env.SUPABASE_SERVICE_ROLE_KEY
+);
 
 /**
  * Propose a session
@@ -6,15 +11,31 @@ const { db } = require('../config/firebase');
  */
 const proposeSession = async (req, res) => {
   try {
-    const { partnerId, proposedDate, proposedTime, skill, notes } = req.body;
+    const { partnerEmail, proposedDate, proposedTime, skill, notes } = req.body;
     const proposerId = req.user.uid;
 
-    if (!partnerId || !proposedDate || !proposedTime || !skill) {
+    if (!partnerEmail || !proposedDate || !proposedTime || !skill) {
       return res.status(400).json({
         success: false,
-        message: 'Partner ID, date, time, and skill are required'
+        message: 'Partner email, date, time, and skill are required'
       });
     }
+
+    // Find partner by email
+    const { data: partnerData, error: partnerError } = await supabase
+      .from('users')
+      .select('uid, email')
+      .eq('email', partnerEmail.toLowerCase())
+      .single();
+
+    if (partnerError || !partnerData) {
+      return res.status(404).json({
+        success: false,
+        message: 'User with this email not found'
+      });
+    }
+
+    const partnerId = partnerData.uid;
 
     if (proposerId === partnerId) {
       return res.status(400).json({
@@ -33,28 +54,27 @@ const proposeSession = async (req, res) => {
       });
     }
 
-    const sessionData = {
-      proposerId,
-      partnerId,
-      skill: skill.trim(),
-      proposedDate: proposedDate,
-      proposedTime: proposedTime,
-      sessionDateTime: sessionDateTime,
-      notes: notes || '',
-      status: 'pending', // pending, confirmed, rejected, completed, cancelled
-      createdAt: new Date(),
-      updatedAt: new Date()
-    };
+    const { data: sessionData, error } = await supabase
+      .from('sessions')
+      .insert({
+        proposer_id: proposerId,
+        partner_id: partnerId,
+        skill: skill.trim(),
+        proposed_date: proposedDate,
+        proposed_time: proposedTime,
+        session_datetime: sessionDateTime.toISOString(),
+        notes: notes || '',
+        status: 'pending'
+      })
+      .select()
+      .single();
 
-    const sessionRef = await db.collection('sessions').add(sessionData);
+    if (error) throw error;
 
     res.status(201).json({
       success: true,
       message: 'Session proposed successfully',
-      data: {
-        sessionId: sessionRef.id,
-        ...sessionData
-      }
+      data: sessionData
     });
   } catch (error) {
     console.error('Propose session error:', error);

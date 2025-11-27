@@ -73,7 +73,7 @@ const Chats = () => {
       if (response.data.success) {
         setMessages([...messages, {
           ...response.data.data,
-          timestamp: new Date()
+          created_at: new Date().toISOString()
         }]);
         fetchChats(); // Refresh chat list
       }
@@ -112,11 +112,11 @@ const Chats = () => {
               messages.map((msg, idx) => (
                 <div
                   key={idx}
-                  className={`message ${msg.senderId === userData?.uid ? 'sent' : 'received'}`}
+                  className={`message ${msg.sender_id === userData?.uid ? 'sent' : 'received'}`}
                 >
                   <div className="message-content">
                     <p>{msg.message}</p>
-                    <span className="message-time">{formatTime(msg.timestamp)}</span>
+                    <span className="message-time">{formatTime(msg.created_at)}</span>
                   </div>
                 </div>
               ))

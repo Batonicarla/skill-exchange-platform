@@ -1,4 +1,9 @@
-const { db } = require('../config/firebase');
+const { createClient } = require('@supabase/supabase-js');
+
+const supabase = createClient(
+  process.env.SUPABASE_URL,
+  process.env.SUPABASE_SERVICE_ROLE_KEY
+);
 
 /**
  * Send a message
@@ -26,37 +31,46 @@ const sendMessage = async (req, res) => {
     // Create chat ID (consistent regardless of sender/receiver order)
     const chatId = [senderId, receiverId].sort().join('_');
 
-    const messageData = {
-      senderId,
-      receiverId,
-      message: message.trim(),
-      timestamp: new Date(),
-      read: false
-    };
+    // Insert message
+    const { data: messageData, error: messageError } = await supabase
+      .from('messages')
+      .insert({
+        chat_id: chatId,
+        sender_id: senderId,
+        receiver_id: receiverId,
+        message: message.trim()
+      })
+      .select()
+      .single();
 
-    // Add message to chat collection
-    await db.collection('chats').doc(chatId).collection('messages').add(messageData);
+    if (messageError) throw messageError;
 
-    // Update chat metadata
-    const chatRef = db.collection('chats').doc(chatId);
-    const chatDoc = await chatRef.get();
+    // Check if chat exists
+    const { data: existingChat } = await supabase
+      .from('chats')
+      .select('id')
+      .eq('id', chatId)
+      .single();
 
-    if (!chatDoc.exists) {
-      // Create chat document
-      await chatRef.set({
-        participants: [senderId, receiverId],
-        lastMessage: message.trim(),
-        lastMessageTime: new Date(),
-        createdAt: new Date(),
-        updatedAt: new Date()
-      });
+    if (!existingChat) {
+      // Create chat
+      await supabase
+        .from('chats')
+        .insert({
+          id: chatId,
+          participants: [senderId, receiverId],
+          last_message: message.trim(),
+          last_message_time: new Date().toISOString()
+        });
     } else {
-      // Update chat document
-      await chatRef.update({
-        lastMessage: message.trim(),
-        lastMessageTime: new Date(),
-        updatedAt: new Date()
-      });
+      // Update chat
+      await supabase
+        .from('chats')
+        .update({
+          last_message: message.trim(),
+          last_message_time: new Date().toISOString()
+        })
+        .eq('id', chatId);
     }
 
     res.json({
@@ -93,22 +107,18 @@ const getChatHistory = async (req, res) => {
     const chatId = [userId, partnerId].sort().join('_');
 
     // Get messages
-    const messagesRef = db.collection('chats').doc(chatId).collection('messages');
-    const snapshot = await messagesRef.orderBy('timestamp', 'asc').get();
+    const { data: messages, error } = await supabase
+      .from('messages')
+      .select('*')
+      .eq('chat_id', chatId)
+      .order('created_at', { ascending: true });
 
-    const messages = [];
-    snapshot.forEach(doc => {
-      messages.push({
-        id: doc.id,
-        ...doc.data(),
-        timestamp: doc.data().timestamp.toDate()
-      });
-    });
+    if (error) throw error;
 
     res.json({
       success: true,
-      data: messages,
-      count: messages.length
+      data: messages || [],
+      count: messages?.length || 0
     });
   } catch (error) {
     console.error('Get chat history error:', error);
@@ -127,44 +137,50 @@ const getUserChats = async (req, res) => {
     const userId = req.user.uid;
 
     // Get all chats where user is a participant
-    const chatsRef = db.collection('chats');
-    const snapshot = await chatsRef.where('participants', 'array-contains', userId).get();
+    const { data: chats, error } = await supabase
+      .from('chats')
+      .select('*')
+      .contains('participants', [userId]);
 
-    const chats = [];
+    if (error) throw error;
 
-    for (const doc of snapshot.docs) {
-      const chatData = doc.data();
-      const partnerId = chatData.participants.find(id => id !== userId);
+    const chatList = [];
+
+    for (const chat of chats || []) {
+      const partnerId = chat.participants.find(id => id !== userId);
       
       // Get partner info
-      const partnerDoc = await db.collection('users').doc(partnerId).get();
-      const partnerData = partnerDoc.exists ? partnerDoc.data() : null;
+      const { data: partnerData } = await supabase
+        .from('users')
+        .select('uid, display_name, photo_url, email')
+        .eq('uid', partnerId)
+        .single();
 
-      chats.push({
-        chatId: doc.id,
+      chatList.push({
+        chatId: chat.id,
         partner: partnerData ? {
           uid: partnerId,
-          displayName: partnerData.displayName,
-          photoURL: partnerData.photoURL,
+          displayName: partnerData.display_name,
+          photoURL: partnerData.photo_url,
           email: partnerData.email
         } : null,
-        lastMessage: chatData.lastMessage,
-        lastMessageTime: chatData.lastMessageTime?.toDate(),
-        unreadCount: 0 // Can be calculated by checking unread messages
+        lastMessage: chat.last_message,
+        lastMessageTime: chat.last_message_time,
+        unreadCount: 0
       });
     }
 
     // Sort by last message time
-    chats.sort((a, b) => {
+    chatList.sort((a, b) => {
       if (!a.lastMessageTime) return 1;
       if (!b.lastMessageTime) return -1;
-      return b.lastMessageTime - a.lastMessageTime;
+      return new Date(b.lastMessageTime) - new Date(a.lastMessageTime);
     });
 
     res.json({
       success: true,
-      data: chats,
-      count: chats.length
+      data: chatList,
+      count: chatList.length
     });
   } catch (error) {
     console.error('Get user chats error:', error);
