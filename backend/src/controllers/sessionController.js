@@ -164,12 +164,24 @@ const respondToSession = async (req, res) => {
       }
     }
 
+    // Get updated session data to return
+    const { data: updatedSession, error: fetchError } = await supabase
+      .from('sessions')
+      .select('*')
+      .eq('id', sessionId)
+      .single();
+
+    if (fetchError) {
+      console.error('Error fetching updated session:', fetchError);
+    }
+
     res.json({
       success: true,
       message: `Session ${newStatus} successfully${newStatus === 'confirmed' ? '. You can now chat with your learning partner!' : ''}`,
       data: {
         sessionId,
-        status: newStatus
+        status: newStatus,
+        session: updatedSession
       }
     });
   } catch (error) {

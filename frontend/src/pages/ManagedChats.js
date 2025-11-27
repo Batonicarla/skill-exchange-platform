@@ -127,15 +127,26 @@ const ManagedChats = () => {
   // Send session request
   const handleSendSessionRequest = async (e) => {
     e.preventDefault();
-    if (!partnerId) return;
+    if (!partnerId || !partner?.email) {
+      setNotification('❌ Partner email not found');
+      setTimeout(() => setNotification(''), 3000);
+      return;
+    }
 
     try {
+      console.log('Sending session request:', {
+        partnerEmail: partner.email,
+        proposedDate: sessionRequest.date,
+        proposedTime: sessionRequest.time,
+        skill: sessionRequest.skill
+      });
+
       const response = await api.post('/sessions/propose', {
-        partnerEmail: partner?.email,
+        partnerEmail: partner.email,
         proposedDate: sessionRequest.date,
         proposedTime: sessionRequest.time,
         skill: sessionRequest.skill,
-        duration: sessionRequest.duration,
+        duration: parseInt(sessionRequest.duration),
         location: sessionRequest.location,
         notes: sessionRequest.notes
       });
@@ -153,10 +164,14 @@ const ManagedChats = () => {
           location: '',
           notes: ''
         });
+      } else {
+        setNotification(`❌ ${response.data.message || 'Failed to send session request'}`);
+        setTimeout(() => setNotification(''), 3000);
       }
     } catch (error) {
       console.error('Error sending session request:', error);
-      setNotification('❌ Failed to send session request');
+      const errorMsg = error.response?.data?.message || 'Failed to send session request';
+      setNotification(`❌ ${errorMsg}`);
       setTimeout(() => setNotification(''), 3000);
     }
   };
