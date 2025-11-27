@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import chatManager from '../services/chatManager';
 import api from '../services/api';
 
 const ManagedChats = () => {
@@ -46,43 +45,44 @@ const ManagedChats = () => {
   // Load user chats
   const loadChats = async () => {
     try {
-      const userChats = await chatManager.getUserChats();
-      setChats(userChats);
+      const response = await api.get('/chat/chats');
+      if (response.data.success) {
+        setChats(response.data.data || []);
+      }
     } catch (error) {
       console.error('Error loading chats:', error);
+      setChats([]);
+    }
+  };
+
+  // Load messages for current chat
+  const loadMessages = async () => {
+    if (!partnerId) return;
+    
+    setLoading(true);
+    try {
+      const response = await api.get(`/chat/history/${partnerId}`);
+      if (response.data.success) {
+        setMessages(response.data.data || []);
+      }
+    } catch (error) {
+      console.error('Error loading messages:', error);
+      setMessages([]);
+    } finally {
+      setLoading(false);
     }
   };
 
   // Initialize chat when partner is selected
   useEffect(() => {
     if (partnerId && userData?.uid) {
-      setLoading(true);
+      loadPartner();
+      loadMessages();
       
-      // Store user ID for chat manager
-      localStorage.setItem('userId', userData.uid);
+      // Poll for new messages every 3 seconds
+      const interval = setInterval(loadMessages, 3000);
       
-      // Start chat and subscribe to updates
-      chatManager.startChat(partnerId).then(() => {
-        const chatId = chatManager.generateChatId(partnerId);
-        
-        // Subscribe to message updates
-        const unsubscribe = chatManager.subscribe(chatId, (newMessages) => {
-          setMessages(newMessages);
-        });
-        
-        // Load initial messages
-        const initialMessages = chatManager.getMessages(partnerId);
-        setMessages(initialMessages);
-        
-        // Load partner info
-        loadPartner();
-        setLoading(false);
-        
-        // Cleanup on unmount
-        return () => {
-          unsubscribe();
-        };
-      });
+      return () => clearInterval(interval);
     } else {
       // Load chats list when no partner selected
       loadChats();
@@ -97,9 +97,27 @@ const ManagedChats = () => {
     const messageText = newMessage;
     setNewMessage('');
 
-    const success = await chatManager.sendMessage(partnerId, messageText);
-    if (!success) {
-      setNewMessage(messageText); // Restore message on failure
+    try {
+      const response = await api.post('/chat/send', {
+        receiverId: partnerId,
+        message: messageText
+      });
+      
+      if (response.data.success) {
+        // Add message to local state immediately
+        const newMsg = {
+          sender_id: userData.uid,
+          receiver_id: partnerId,
+          message: messageText,
+          created_at: new Date().toISOString()
+        };
+        setMessages(prev => [...prev, newMsg]);
+      } else {
+        setNewMessage(messageText); // Restore on failure
+      }
+    } catch (error) {
+      console.error('Error sending message:', error);
+      setNewMessage(messageText); // Restore on failure
     }
   };
 
@@ -123,7 +141,20 @@ const ManagedChats = () => {
         // Send a special message in chat about the session request
         const sessionMessage = `📅 Session Request Sent\n\n🎯 Skill: ${sessionRequest.skill}\n📅 Date: ${new Date(sessionRequest.date).toLocaleDateString()}\n🕐 Time: ${sessionRequest.time}\n⏱️ Duration: ${sessionRequest.duration} minutes\n📍 Location: ${sessionRequest.location || 'To be decided'}\n\n${sessionRequest.notes ? '📝 Notes: ' + sessionRequest.notes : ''}`;
         
-        await chatManager.sendMessage(partnerId, sessionMessage);
+        // Send session request as message
+        await api.post('/chat/send', {
+          receiverId: partnerId,
+          message: sessionMessage
+        });
+        
+        // Add to local messages
+        const newMsg = {
+          sender_id: userData.uid,
+          receiver_id: partnerId,
+          message: sessionMessage,
+          created_at: new Date().toISOString()
+        };
+        setMessages(prev => [...prev, newMsg]);
         
         setShowSessionForm(false);
         setSessionRequest({
@@ -147,12 +178,7 @@ const ManagedChats = () => {
     return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   };
 
-  // Cleanup on unmount
-  useEffect(() => {
-    return () => {
-      chatManager.cleanup();
-    };
-  }, []);
+
 
   // Show chats with sidebar layout
   return (
