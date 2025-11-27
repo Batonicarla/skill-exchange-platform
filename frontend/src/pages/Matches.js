@@ -89,20 +89,14 @@ const Matches = () => {
                     View Profile
                   </Link>
                   <Link to={`/chats/${match.uid}`} className="btn btn-secondary">
-                    Start Chat
+                    Message
                   </Link>
-                  <button
-                    onClick={() => {
-                      setSelectedMatch({
-                        partnerId: match.uid,
-                        partnerName: match.displayName
-                      });
-                      setShowRatingModal(true);
-                    }}
+                  <Link 
+                    to={`/sessions/propose/${match.uid}`}
                     className="btn btn-accent"
                   >
-                    Rate User
-                  </button>
+                    Propose Session
+                  </Link>
                 </div>
               </div>
             ))}

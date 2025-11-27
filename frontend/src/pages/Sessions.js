@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, Link } from 'react-router-dom';
 import api from '../services/api';
 import RatingModal from '../components/RatingModal';
 import './Sessions.css';
@@ -144,6 +144,16 @@ const Sessions = () => {
     return dateTime.toLocaleString();
   };
 
+  if (sessionId && loading) {
+    return (
+      <div className="container">
+        <div className="session-details-page">
+          <p>Loading session details...</p>
+        </div>
+      </div>
+    );
+  }
+
   if (sessionId && sessionDetails) {
     // Session details view
     return (
@@ -154,7 +164,15 @@ const Sessions = () => {
           </button>
           
           <div className="session-details-card">
-            <h2>Session Details</h2>
+            <div className="session-header">
+              <h2>Session Details</h2>
+              <span 
+                className="status-badge"
+                style={{ backgroundColor: getStatusColor(sessionDetails.status) }}
+              >
+                {sessionDetails.status.toUpperCase()}
+              </span>
+            </div>
             
             {message && (
               <div className={`message ${message.includes('Error') ? 'error' : 'success'}`}>
@@ -163,75 +181,117 @@ const Sessions = () => {
             )}
 
             <div className="session-info">
-              <div className="info-row">
-                <strong>Partner:</strong>
-                <span>{sessionDetails.partner?.displayName || 'Unknown'}</span>
-              </div>
-              <div className="info-row">
-                <strong>Skill:</strong>
-                <span>{sessionDetails.skill}</span>
-              </div>
-              <div className="info-row">
-                <strong>Date & Time:</strong>
-                <span>{formatDateTime(sessionDetails.proposedDate, sessionDetails.proposedTime)}</span>
-              </div>
-              <div className="info-row">
-                <strong>Status:</strong>
-                <span style={{ color: getStatusColor(sessionDetails.status) }}>
-                  {sessionDetails.status.toUpperCase()}
-                </span>
-              </div>
-              {sessionDetails.notes && (
+              <div className="info-section">
+                <h3>Learning Details</h3>
                 <div className="info-row">
-                  <strong>Notes:</strong>
-                  <span>{sessionDetails.notes}</span>
+                  <strong>Skill:</strong>
+                  <span>{sessionDetails.skill}</span>
                 </div>
-              )}
+                <div className="info-row">
+                  <strong>Date & Time:</strong>
+                  <span>{formatDateTime(sessionDetails.proposedDate, sessionDetails.proposedTime)}</span>
+                </div>
+                {sessionDetails.notes && (
+                  <div className="info-row">
+                    <strong>Notes:</strong>
+                    <span>{sessionDetails.notes}</span>
+                  </div>
+                )}
+              </div>
+
+              <div className="info-section">
+                <h3>Partner Information</h3>
+                <div className="info-row">
+                  <strong>Name:</strong>
+                  <span>{sessionDetails.partner?.displayName || sessionDetails.partner?.display_name || 'Unknown'}</span>
+                </div>
+                <div className="info-row">
+                  <strong>Your Role:</strong>
+                  <span>{sessionDetails.role === 'proposer' ? 'Learning from them' : 'Teaching them'}</span>
+                </div>
+              </div>
             </div>
 
             <div className="session-actions">
               {sessionDetails.status === 'pending' && sessionDetails.role === 'partner' && (
-                <>
+                <div className="action-group">
+                  <h4>Respond to Session Request</h4>
                   <button
                     onClick={() => handleRespondToSession(sessionId, 'confirm')}
                     className="btn btn-primary"
                     disabled={loading}
                   >
-                    Confirm
+                    ✓ Accept Session
                   </button>
                   <button
                     onClick={() => handleRespondToSession(sessionId, 'reject')}
                     className="btn btn-danger"
                     disabled={loading}
                   >
-                    Reject
+                    ✗ Decline Session
                   </button>
-                </>
+                </div>
               )}
-              {['pending', 'confirmed'].includes(sessionDetails.status) && (
-                <button
-                  onClick={() => handleCancelSession(sessionId)}
-                  className="btn btn-danger"
-                  disabled={loading}
-                >
-                  Cancel Session
-                </button>
+              
+              {sessionDetails.status === 'pending' && sessionDetails.role === 'proposer' && (
+                <div className="action-group">
+                  <p className="waiting-message">Waiting for {sessionDetails.partner?.displayName || 'partner'} to respond...</p>
+                </div>
               )}
+
               {sessionDetails.status === 'confirmed' && (
-                <button
-                  onClick={() => {
-                    setSelectedSession({
-                      sessionId: sessionDetails.sessionId || sessionId,
-                      partnerId: sessionDetails.partner?.uid
-                    });
-                    setShowRatingModal(true);
-                  }}
-                  className="btn btn-accent"
-                >
-                  Rate Session
-                </button>
+                <div className="action-group">
+                  <h4>Session Confirmed!</h4>
+                  <p>Contact your partner to coordinate the session details.</p>
+                  <Link 
+                    to={`/chats/${sessionDetails.partner?.uid || sessionDetails.partnerId}`}
+                    className="btn btn-primary"
+                  >
+                    💬 Message Partner
+                  </Link>
+                  <button
+                    onClick={() => {
+                      setSelectedSession({
+                        sessionId: sessionDetails.sessionId || sessionId,
+                        partnerId: sessionDetails.partner?.uid || sessionDetails.partnerId
+                      });
+                      setShowRatingModal(true);
+                    }}
+                    className="btn btn-accent"
+                  >
+                    ⭐ Rate Session
+                  </button>
+                </div>
+              )}
+
+              {['pending', 'confirmed'].includes(sessionDetails.status) && (
+                <div className="action-group danger-zone">
+                  <button
+                    onClick={() => handleCancelSession(sessionId)}
+                    className="btn btn-danger"
+                    disabled={loading}
+                  >
+                    🗑️ Cancel Session
+                  </button>
+                </div>
               )}
             </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (sessionId && !sessionDetails && !loading) {
+    return (
+      <div className="container">
+        <div className="session-details-page">
+          <button onClick={() => navigate('/sessions')} className="btn btn-secondary">
+            ← Back to Sessions
+          </button>
+          <div className="error-state">
+            <h2>Session Not Found</h2>
+            <p>The session you're looking for doesn't exist or you don't have access to it.</p>
           </div>
         </div>
       </div>
@@ -243,10 +303,15 @@ const Sessions = () => {
     <div className="container">
       <div className="sessions-page">
         <div className="sessions-header">
-          <h1>My Sessions</h1>
-          <button onClick={() => setShowProposeForm(!showProposeForm)} className="btn btn-primary">
-            {showProposeForm ? 'Cancel' : 'Propose New Session'}
-          </button>
+          <h1>My Learning Sessions</h1>
+          <div className="header-actions">
+            <Link to="/matches" className="btn btn-secondary">
+              Find Learning Partners
+            </Link>
+            <button onClick={() => setShowProposeForm(!showProposeForm)} className="btn btn-primary">
+              {showProposeForm ? 'Cancel' : '+ Propose Session'}
+            </button>
+          </div>
         </div>
 
         {message && (
@@ -257,33 +322,40 @@ const Sessions = () => {
 
         {showProposeForm && (
           <div className="propose-session-form card">
-            <h2>Propose a Session</h2>
+            <div className="form-header">
+              <h2>📚 Propose a Learning Session</h2>
+              <p>Reach out to someone directly to start learning together!</p>
+            </div>
+            
             <form onSubmit={handleProposeSession}>
               <div className="form-group">
-                <label>Partner Email</label>
+                <label>👤 Partner's Email Address</label>
                 <input
                   type="email"
                   value={proposeData.partnerEmail}
                   onChange={(e) => setProposeData({ ...proposeData, partnerEmail: e.target.value })}
                   className="input"
                   required
-                  placeholder="Enter partner's email address"
+                  placeholder="Enter their email address"
                 />
+                <small className="form-hint">We'll send them a notification about your session request</small>
               </div>
+              
               <div className="form-group">
-                <label>Skill</label>
+                <label>🎯 What do you want to learn?</label>
                 <input
                   type="text"
                   value={proposeData.skill}
                   onChange={(e) => setProposeData({ ...proposeData, skill: e.target.value })}
                   className="input"
                   required
-                  placeholder="e.g., JavaScript, Guitar"
+                  placeholder="e.g., JavaScript, Guitar, Spanish, Cooking"
                 />
               </div>
+              
               <div className="form-row">
                 <div className="form-group">
-                  <label>Date</label>
+                  <label>📅 Preferred Date</label>
                   <input
                     type="date"
                     value={proposeData.proposedDate}
@@ -293,7 +365,7 @@ const Sessions = () => {
                   />
                 </div>
                 <div className="form-group">
-                  <label>Time</label>
+                  <label>🕐 Preferred Time</label>
                   <input
                     type="time"
                     value={proposeData.proposedTime}
@@ -303,69 +375,135 @@ const Sessions = () => {
                   />
                 </div>
               </div>
+              
               <div className="form-group">
-                <label>Notes (Optional)</label>
+                <label>📝 Additional Notes (Optional)</label>
                 <textarea
                   value={proposeData.notes}
                   onChange={(e) => setProposeData({ ...proposeData, notes: e.target.value })}
                   className="input"
                   rows="3"
-                  placeholder="Additional details about the session"
+                  placeholder="Any specific topics, meeting preferences, or other details..."
                 />
               </div>
-              <button type="submit" className="btn btn-primary" disabled={loading}>
-                {loading ? 'Proposing...' : 'Propose Session'}
-              </button>
+              
+              <div className="form-actions">
+                <button 
+                  type="button" 
+                  onClick={() => setShowProposeForm(false)}
+                  className="btn btn-secondary"
+                >
+                  Cancel
+                </button>
+                <button type="submit" className="btn btn-primary" disabled={loading}>
+                  {loading ? 'Sending Request...' : '📤 Send Session Request'}
+                </button>
+              </div>
             </form>
           </div>
         )}
 
         {sessions.length === 0 ? (
           <div className="empty-state">
-            <p>No sessions yet. Propose a session to start learning!</p>
+            <div className="empty-icon">📚</div>
+            <h3>No Learning Sessions Yet</h3>
+            <p>Start your learning journey by proposing a session or finding matches!</p>
+            <div className="empty-actions">
+              <Link to="/matches" className="btn btn-primary">
+                Find Learning Partners
+              </Link>
+              <button onClick={() => setShowProposeForm(true)} className="btn btn-secondary">
+                Propose Session
+              </button>
+            </div>
           </div>
         ) : (
           <div className="sessions-list">
-            {sessions.map((session) => (
-              <div key={session.sessionId} className="session-card">
-                <div className="session-card-header">
-                  <h3>{session.skill}</h3>
-                  <span
-                    className="session-status"
-                    style={{ backgroundColor: getStatusColor(session.status) }}
-                  >
-                    {session.status.toUpperCase()}
-                  </span>
-                </div>
-                <div className="session-card-info">
-                  <p><strong>Role:</strong> {session.role}</p>
-                  <p><strong>Date & Time:</strong> {formatDateTime(session.proposedDate, session.proposedTime)}</p>
-                  {session.notes && <p><strong>Notes:</strong> {session.notes}</p>}
-                </div>
-                <div className="session-card-actions">
-                  <button
-                    onClick={() => navigate(`/sessions/${session.sessionId}`)}
-                    className="btn btn-primary"
-                  >
-                    View Details
-                  </button>
-                  {session.status === 'confirmed' && (
-                    <button
-                      onClick={() => {
-                        setSelectedSession({
-                          sessionId: session.sessionId,
-                          partnerId: session.role === 'proposer' ? session.partnerId : session.proposerId
-                        });
-                        setShowRatingModal(true);
-                      }}
-                      className="btn btn-accent"
+            {sessions.map((session) => {
+              const isTeaching = session.role === 'partner';
+              const isLearning = session.role === 'proposer';
+              
+              return (
+                <div key={session.sessionId} className="session-card">
+                  <div className="session-card-header">
+                    <div className="session-title">
+                      <h3>{session.skill}</h3>
+                      <span className="role-indicator">
+                        {isTeaching ? '👨‍🏫 Teaching' : '👨‍🎓 Learning'}
+                      </span>
+                    </div>
+                    <span
+                      className="session-status"
+                      style={{ backgroundColor: getStatusColor(session.status) }}
                     >
-                      Rate
+                      {session.status.toUpperCase()}
+                    </span>
+                  </div>
+                  
+                  <div className="session-card-info">
+                    <div className="info-item">
+                      <span className="info-label">📅 Date & Time:</span>
+                      <span>{formatDateTime(session.proposedDate, session.proposedTime)}</span>
+                    </div>
+                    
+                    {session.partnerName && (
+                      <div className="info-item">
+                        <span className="info-label">👤 Partner:</span>
+                        <span>{session.partnerName}</span>
+                      </div>
+                    )}
+                    
+                    {session.notes && (
+                      <div className="info-item">
+                        <span className="info-label">📝 Notes:</span>
+                        <span>{session.notes}</span>
+                      </div>
+                    )}
+                  </div>
+                  
+                  <div className="session-card-actions">
+                    <button
+                      onClick={() => navigate(`/sessions/${session.sessionId}`)}
+                      className="btn btn-primary"
+                    >
+                      View Details
                     </button>
-                  )}
+                    
+                    {session.status === 'confirmed' && (
+                      <>
+                        <Link
+                          to={`/chats/${session.role === 'proposer' ? session.partnerId : session.proposerId}`}
+                          className="btn btn-secondary"
+                        >
+                          Message
+                        </Link>
+                        <button
+                          onClick={() => {
+                            setSelectedSession({
+                              sessionId: session.sessionId,
+                              partnerId: session.role === 'proposer' ? session.partnerId : session.proposerId
+                            });
+                            setShowRatingModal(true);
+                          }}
+                          className="btn btn-accent"
+                        >
+                          Rate
+                        </button>
+                      </>
+                    )}
+                    
+                    {session.status === 'pending' && session.role === 'partner' && (
+                      <button
+                        onClick={() => navigate(`/sessions/${session.sessionId}`)}
+                        className="btn btn-accent"
+                      >
+                        Respond
+                      </button>
+                    )}
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
         

@@ -15,6 +15,7 @@ import Search from './pages/Search';
 import Matches from './pages/Matches';
 import ManagedChats from './pages/ManagedChats';
 import Sessions from './pages/Sessions';
+import ProposeSession from './pages/ProposeSession';
 import ResetPassword from './pages/ResetPassword';
 import UserProfile from './pages/UserProfile';
 
@@ -100,6 +101,14 @@ function App() {
                 element={
                   <PrivateRoute>
                     <Sessions />
+                  </PrivateRoute>
+                }
+              />
+              <Route
+                path="/sessions/propose/:partnerId"
+                element={
+                  <PrivateRoute>
+                    <ProposeSession />
                   </PrivateRoute>
                 }
               />

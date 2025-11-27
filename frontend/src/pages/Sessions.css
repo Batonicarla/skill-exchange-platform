@@ -9,8 +9,70 @@
   margin-bottom: 30px;
 }
 
+.header-actions {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
 .propose-session-form {
   margin-bottom: 30px;
+}
+
+.form-header {
+  margin-bottom: 24px;
+}
+
+.form-header h2 {
+  margin: 0 0 8px 0;
+  color: var(--color-text);
+}
+
+.form-header p {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: 14px;
+}
+
+.form-hint {
+  display: block;
+  margin-top: 4px;
+  color: var(--color-text-muted);
+  font-size: 12px;
+}
+
+.form-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 60px 20px;
+  color: var(--color-text-muted);
+}
+
+.empty-icon {
+  font-size: 48px;
+  margin-bottom: 16px;
+}
+
+.empty-state h3 {
+  margin: 0 0 12px 0;
+  color: var(--color-text);
+}
+
+.empty-state p {
+  margin: 0 0 24px 0;
+  color: var(--color-text-muted);
+}
+
+.empty-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  flex-wrap: wrap;
 }
 
 .form-row {
@@ -36,13 +98,26 @@
 .session-card-header {
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-start;
   margin-bottom: 15px;
 }
 
-.session-card-header h3 {
+.session-title {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.session-title h3 {
   margin: 0;
   color: var(--color-text);
+  font-size: 18px;
+}
+
+.role-indicator {
+  font-size: 12px;
+  color: var(--color-text-muted);
+  font-weight: 500;
 }
 
 .session-status {
@@ -64,6 +139,27 @@
   color: var(--color-text-muted);
 }
 
+.info-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 8px;
+  gap: 12px;
+}
+
+.info-label {
+  font-weight: 500;
+  color: var(--color-text);
+  min-width: 120px;
+  flex-shrink: 0;
+}
+
+.session-card-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
 .session-details-page {
   padding: 30px 0;
 }
@@ -75,6 +171,72 @@
   box-shadow: 0 20px 45px var(--color-card-shadow);
   margin-top: 20px;
   border: 1px solid var(--color-border);
+}
+
+.session-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.status-badge {
+  padding: 8px 16px;
+  border-radius: 999px;
+  color: white;
+  font-size: 12px;
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.info-section {
+  margin-bottom: 24px;
+}
+
+.info-section h3 {
+  margin: 0 0 16px 0;
+  color: var(--color-text);
+  font-size: 16px;
+  border-bottom: 1px solid var(--color-border);
+  padding-bottom: 8px;
+}
+
+.action-group {
+  margin-bottom: 20px;
+  padding: 20px;
+  background: var(--color-background);
+  border-radius: 12px;
+  border: 1px solid var(--color-border);
+}
+
+.action-group h4 {
+  margin: 0 0 12px 0;
+  color: var(--color-text);
+  font-size: 14px;
+}
+
+.action-group p {
+  margin: 0 0 16px 0;
+  color: var(--color-text-muted);
+  font-size: 14px;
+}
+
+.waiting-message {
+  color: var(--color-text-muted);
+  font-style: italic;
+  margin: 0;
+}
+
+.danger-zone {
+  border-color: #fee2e2;
+  background: #fef2f2;
+}
+
+.error-state {
+  text-align: center;
+  padding: 40px;
+  color: var(--color-text-muted);
 }
 
 .session-info {
@@ -110,6 +272,39 @@
     flex-direction: column;
     gap: 15px;
     align-items: flex-start;
+  }
+  
+  .header-actions {
+    width: 100%;
+    justify-content: flex-start;
+  }
+  
+  .session-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  
+  .info-item {
+    flex-direction: column;
+    gap: 4px;
+  }
+  
+  .info-label {
+    min-width: auto;
+  }
+  
+  .session-card-actions {
+    flex-direction: column;
+  }
+  
+  .form-actions {
+    flex-direction: column;
+  }
+  
+  .empty-actions {
+    flex-direction: column;
+    align-items: center;
   }
 }
 
