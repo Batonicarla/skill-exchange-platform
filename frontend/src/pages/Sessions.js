@@ -98,10 +98,17 @@ const Sessions = () => {
     try {
       const response = await api.put(`/sessions/${sessionId}/respond`, { action });
       if (response.data.success) {
-        setMessage(`Session ${action === 'confirm' ? 'confirmed' : 'rejected'}!`);
+        setMessage(response.data.message);
         fetchSessions();
         if (sessionDetails) {
           fetchSessionDetails();
+        }
+        
+        // If session was confirmed, show success message for longer
+        if (action === 'confirm') {
+          setTimeout(() => {
+            setMessage('');
+          }, 5000);
         }
       }
     } catch (error) {
@@ -272,6 +279,7 @@ const Sessions = () => {
               {sessionDetails.status === 'pending' && sessionDetails.role === 'partner' && (
                 <div className="action-group">
                   <h4>Respond to Session Request</h4>
+                  <p>Someone wants to learn {sessionDetails.skill} from you!</p>
                   <button
                     onClick={() => handleRespondToSession(sessionId, 'confirm')}
                     className="btn btn-primary"
@@ -291,25 +299,33 @@ const Sessions = () => {
               
               {sessionDetails.status === 'pending' && sessionDetails.role === 'proposer' && (
                 <div className="action-group">
-                  <p className="waiting-message">Waiting for {sessionDetails.partner?.displayName || 'partner'} to respond...</p>
+                  <h4>⏳ Waiting for Response</h4>
+                  <p className="waiting-message">Your session request has been sent to {sessionDetails.partner?.displayName || 'your partner'}. They will receive a notification and can accept or decline from their sessions page.</p>
+                </div>
+              )}
+              
+              {sessionDetails.status === 'rejected' && (
+                <div className="action-group" style={{ borderColor: '#fee2e2', background: '#fef2f2' }}>
+                  <h4>❌ Session Declined</h4>
+                  <p>Unfortunately, this session request was declined. You can try proposing a different time or skill.</p>
                 </div>
               )}
 
               {sessionDetails.status === 'confirmed' && (
                 <div className="action-group">
-                  <h4>Session Confirmed!</h4>
-                  <p>Contact your partner to coordinate the session details.</p>
+                  <h4>🎉 Session Confirmed!</h4>
+                  <p>Great! You can now chat with your learning partner to coordinate the session details.</p>
                   <Link 
-                    to={`/chats/${sessionDetails.partner?.uid || sessionDetails.partnerId}`}
+                    to={`/chats/${sessionDetails.role === 'proposer' ? sessionDetails.partnerId : sessionDetails.proposerId}`}
                     className="btn btn-primary"
                   >
-                    💬 Message Partner
+                    💬 Start Chatting
                   </Link>
                   <button
                     onClick={() => {
                       setSelectedSession({
                         sessionId: sessionDetails.sessionId || sessionId,
-                        partnerId: sessionDetails.partner?.uid || sessionDetails.partnerId
+                        partnerId: sessionDetails.role === 'proposer' ? sessionDetails.partnerId : sessionDetails.proposerId
                       });
                       setShowRatingModal(true);
                     }}
@@ -529,9 +545,9 @@ const Sessions = () => {
                       <>
                         <Link
                           to={`/chats/${session.role === 'proposer' ? session.partnerId : session.proposerId}`}
-                          className="btn btn-secondary"
+                          className="btn btn-primary"
                         >
-                          Message
+                          💬 Chat
                         </Link>
                         <button
                           onClick={() => {
@@ -543,7 +559,7 @@ const Sessions = () => {
                           }}
                           className="btn btn-accent"
                         >
-                          Rate
+                          ⭐ Rate
                         </button>
                       </>
                     )}
@@ -553,8 +569,18 @@ const Sessions = () => {
                         onClick={() => navigate(`/sessions/${session.sessionId}`)}
                         className="btn btn-accent"
                       >
-                        Respond
+                        ⏳ Respond
                       </button>
+                    )}
+                    
+                    {session.status === 'pending' && session.role === 'proposer' && (
+                      <span className="waiting-indicator" style={{ 
+                        color: 'var(--color-text-muted)', 
+                        fontSize: '12px',
+                        fontStyle: 'italic'
+                      }}>
+                        Waiting for response...
+                      </span>
                     )}
                   </div>
                 </div>

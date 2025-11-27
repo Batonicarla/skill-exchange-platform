@@ -137,9 +137,34 @@ const respondToSession = async (req, res) => {
 
     if (updateError) throw updateError;
 
+    // If session is confirmed, automatically create/ensure chat exists
+    if (newStatus === 'confirmed') {
+      const participant1 = sessionData.proposer_id;
+      const participant2 = sessionData.partner_id;
+      
+      // Check if chat already exists
+      const { data: existingChat } = await supabase
+        .from('chats')
+        .select('id')
+        .or(`and(participant1.eq.${participant1},participant2.eq.${participant2}),and(participant1.eq.${participant2},participant2.eq.${participant1})`)
+        .single();
+
+      if (!existingChat) {
+        // Create new chat
+        await supabase
+          .from('chats')
+          .insert({
+            participant1,
+            participant2,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+          });
+      }
+    }
+
     res.json({
       success: true,
-      message: `Session ${newStatus} successfully`,
+      message: `Session ${newStatus} successfully${newStatus === 'confirmed' ? '. You can now chat with your learning partner!' : ''}`,
       data: {
         sessionId,
         status: newStatus
