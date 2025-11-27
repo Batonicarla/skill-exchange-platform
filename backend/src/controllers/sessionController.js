@@ -9,10 +9,13 @@ const proposeSession = async (req, res) => {
     const { partnerEmail, proposedDate, proposedTime, skill, duration, location, notes } = req.body;
     const proposerId = req.user.uid;
 
+    console.log('Propose session request:', req.body);
+
     if (!partnerEmail || !proposedDate || !proposedTime || !skill) {
       return res.status(400).json({
         success: false,
-        message: 'Partner email, date, time, and skill are required'
+        message: 'Partner email, date, time, and skill are required',
+        received: { partnerEmail, proposedDate, proposedTime, skill }
       });
     }
 
