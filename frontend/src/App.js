@@ -13,7 +13,7 @@ import Dashboard from './pages/Dashboard';
 import Profile from './pages/Profile';
 import Search from './pages/Search';
 import Matches from './pages/Matches';
-import SimpleChats from './pages/SimpleChats';
+import WorkingChats from './pages/WorkingChats';
 import Sessions from './pages/Sessions';
 import ResetPassword from './pages/ResetPassword';
 import UserProfile from './pages/UserProfile';
@@ -75,7 +75,7 @@ function App() {
                 path="/chats"
                 element={
                   <PrivateRoute>
-                    <SimpleChats />
+                    <WorkingChats />
                   </PrivateRoute>
                 }
               />
@@ -83,7 +83,7 @@ function App() {
                 path="/chats/:partnerId"
                 element={
                   <PrivateRoute>
-                    <SimpleChats />
+                    <WorkingChats />
                   </PrivateRoute>
                 }
               />

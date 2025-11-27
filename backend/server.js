@@ -34,6 +34,10 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'OK', message: 'Skill Exchange Platform API is running' });
 });
 
+// Test database endpoint
+const { testDatabase } = require('./src/controllers/testController');
+app.get('/api/test-db', testDatabase);
+
 // API Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
