@@ -80,14 +80,19 @@ const Sessions = () => {
     setLoading(true);
     setMessage('');
 
+    console.log('Proposing session with data:', proposeData);
+
     try {
       const response = await api.post('/sessions/propose', {
-        partnerEmail: proposeData.partnerEmail,
+        partnerEmail: proposeData.partnerEmail.trim(),
         proposedDate: proposeData.proposedDate,
         proposedTime: proposeData.proposedTime,
-        skill: proposeData.skill,
+        skill: proposeData.skill.trim(),
         notes: proposeData.notes
       });
+      
+      console.log('Propose response:', response.data);
+      
       if (response.data.success) {
         setMessage('🎉 Session proposed successfully!');
         setShowProposeForm(false);
@@ -99,9 +104,13 @@ const Sessions = () => {
           notes: ''
         });
         fetchSessions();
+      } else {
+        setMessage(response.data.message || 'Error proposing session');
       }
     } catch (error) {
-      setMessage(error.response?.data?.message || 'Error proposing session');
+      console.error('Error proposing session:', error);
+      const errorMsg = error.response?.data?.message || error.message || 'Error proposing session';
+      setMessage(errorMsg);
     } finally {
       setLoading(false);
     }
