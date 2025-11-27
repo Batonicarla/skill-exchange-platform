@@ -39,6 +39,37 @@
   padding: 15px 32px;
   font-size: 18px;
   border-radius: 999px;
+  font-weight: 600;
+  text-decoration: none;
+  display: inline-block;
+  transition: all 0.3s ease;
+  border: 2px solid transparent;
+}
+
+.hero-actions .btn-primary {
+  background: var(--color-accent);
+  color: white;
+  border-color: var(--color-accent);
+}
+
+.hero-actions .btn-primary:hover {
+  background: var(--color-accent-hover);
+  border-color: var(--color-accent-hover);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(249, 115, 22, 0.3);
+}
+
+.hero-actions .btn-secondary {
+  background: transparent;
+  color: var(--color-text);
+  border-color: var(--color-border);
+}
+
+.hero-actions .btn-secondary:hover {
+  background: var(--color-surface-alt);
+  border-color: var(--color-accent);
+  color: var(--color-accent);
+  transform: translateY(-2px);
 }
 
 .features-section {
