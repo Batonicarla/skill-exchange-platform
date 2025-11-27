@@ -115,24 +115,29 @@ const Sessions = () => {
     try {
       const response = await api.put(`/sessions/${sessionId}/respond`, { action });
       if (response.data.success) {
-        setMessage(response.data.message);
+        const newStatus = action === 'confirm' ? 'confirmed' : 'rejected';
         
-        // Force immediate refresh of session details
-        setTimeout(async () => {
-          await fetchSessionDetails();
-          await fetchSessions();
-          // Clear message after successful update
-          if (action === 'confirm') {
-            setTimeout(() => setMessage(''), 3000);
-          }
-        }, 100);
+        // Immediately update local state for instant UI feedback
+        setSessionDetails(prev => ({
+          ...prev,
+          status: newStatus,
+          respondedAt: new Date().toISOString()
+        }));
         
-        // If session was confirmed, show success message for longer
         if (action === 'confirm') {
+          setMessage('🎉 Session confirmed! Redirecting to chat...');
+          // Auto-redirect to chat after 2 seconds
           setTimeout(() => {
-            setMessage('');
-          }, 5000);
+            const partnerId = sessionDetails.role === 'proposer' ? sessionDetails.partnerId : sessionDetails.proposerId;
+            navigate(`/chats/${partnerId}`);
+          }, 2000);
+        } else {
+          setMessage('Session declined.');
         }
+        
+        // Refresh data in background
+        fetchSessionDetails();
+        fetchSessions();
       }
     } catch (error) {
       setMessage(error.response?.data?.message || 'Error responding to session');
