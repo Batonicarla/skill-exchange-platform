@@ -8,5 +8,8 @@ router.use(verifyToken);
 
 // Rating routes
 router.post('/', submitRating);
+router.get('/user/:userId', async (req, res) => {
+  res.json({ success: true, data: [], count: 0 });
+});
 
 module.exports = router;
