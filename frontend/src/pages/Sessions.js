@@ -65,9 +65,15 @@ const Sessions = () => {
     setMessage('');
 
     try {
-      const response = await api.post('/sessions/propose', proposeData);
+      const response = await api.post('/sessions/propose', {
+        partnerEmail: proposeData.partnerEmail,
+        proposedDate: proposeData.proposedDate,
+        proposedTime: proposeData.proposedTime,
+        skill: proposeData.skill,
+        notes: proposeData.notes
+      });
       if (response.data.success) {
-        setMessage('Session proposed successfully!');
+        setMessage('🎉 Session proposed successfully!');
         setShowProposeForm(false);
         setProposeData({
           partnerEmail: '',
