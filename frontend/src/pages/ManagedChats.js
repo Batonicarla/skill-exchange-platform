@@ -141,21 +141,8 @@ const ManagedChats = () => {
       });
 
       if (response.data.success) {
-        // Send a special message in chat about the session request
-        const sessionMessage = `📅 Session Request Sent\n\n🎯 Skill: ${sessionRequest.skill}\n📅 Date: ${new Date(sessionRequest.date).toLocaleDateString()}\n🕐 Time: ${sessionRequest.time}\n⏱️ Duration: ${sessionRequest.duration} minutes\n📍 Location: ${sessionRequest.location || 'To be decided'}\n\n${sessionRequest.notes ? '📝 Notes: ' + sessionRequest.notes : ''}`;
-        
-        // Send session request as message
-        const sessionResponse = await api.post('/chat/send', {
-          receiverId: partnerId,
-          message: sessionMessage
-        });
-        
-        if (sessionResponse.data.success) {
-          // Reload messages to show the session request
-          loadMessages();
-          setNotification('📤 Session request sent!');
-          setTimeout(() => setNotification(''), 3000);
-        }
+        setNotification('📤 Session request sent! They can view it in their Sessions page.');
+        setTimeout(() => setNotification(''), 4000);
         
         setShowSessionForm(false);
         setSessionRequest({
@@ -169,6 +156,8 @@ const ManagedChats = () => {
       }
     } catch (error) {
       console.error('Error sending session request:', error);
+      setNotification('❌ Failed to send session request');
+      setTimeout(() => setNotification(''), 3000);
     }
   };
 

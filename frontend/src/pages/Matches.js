@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import api from '../services/api';
-import RatingModal from '../components/RatingModal';
+import SimpleRatingModal from '../components/SimpleRatingModal';
 import './Matches.css';
 
 const Matches = () => {
@@ -56,7 +56,7 @@ const Matches = () => {
                 {match.bio && <p className="match-bio">{match.bio}</p>}
                 
                 <div className="match-rating">
-                  <span>Rating: {match.rating || 0}/5</span>
+                  <span>⭐ {match.rating ? match.rating.toFixed(1) : '0.0'}/5</span>
                   <span>({match.totalRatings || 0} reviews)</span>
                 </div>
 
@@ -95,7 +95,7 @@ const Matches = () => {
                     onClick={() => {
                       setSelectedMatch({
                         partnerId: match.uid,
-                        sessionId: 'general-rating'
+                        displayName: match.displayName || match.display_name
                       });
                       setShowRatingModal(true);
                     }}
@@ -110,10 +110,10 @@ const Matches = () => {
         )}
         
         {showRatingModal && selectedMatch && (
-          <RatingModal
-            session={{
-              partnerId: selectedMatch.partnerId,
-              sessionId: 'general-rating' // For general ratings without specific session
+          <SimpleRatingModal
+            partner={{
+              uid: selectedMatch.partnerId,
+              displayName: selectedMatch.displayName || selectedMatch.display_name
             }}
             onClose={() => {
               setShowRatingModal(false);

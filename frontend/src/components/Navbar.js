@@ -34,7 +34,6 @@ const Navbar = () => {
               <Link to="/search">Search</Link>
               <Link to="/chats">Chats</Link>
               <Link to="/sessions">Sessions</Link>
-              <Link to="/ratings">Rate</Link>
               <Link to="/profile">Profile</Link>
               {userData?.role === 'admin' && (
                 <Link to="/admin">Admin</Link>
