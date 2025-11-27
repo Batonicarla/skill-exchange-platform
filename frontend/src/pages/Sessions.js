@@ -505,7 +505,7 @@ const Sessions = () => {
                         {isTeaching ? '👨‍🏫 Teaching' : '👨‍🎓 Learning'}
                       </span>
                     </div>
-                    {session.status !== 'confirmed' && (
+                    {session.status === 'rejected' && (
                       <span
                         className="session-status"
                         style={{ backgroundColor: getStatusColor(session.status) }}
