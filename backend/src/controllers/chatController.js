@@ -29,11 +29,10 @@ const sendMessage = async (req, res) => {
     const chatId = [senderId, receiverId].sort().join('_');
     console.log('Generated chat ID:', chatId);
 
-    // Insert message
+    // Insert message without chat_id constraint
     const { data: messageData, error: messageError } = await supabase
       .from('messages')
       .insert({
-        chat_id: chatId,
         sender_id: senderId,
         receiver_id: receiverId,
         message: message.trim(),
@@ -49,12 +48,7 @@ const sendMessage = async (req, res) => {
 
     console.log('Message inserted:', messageData);
 
-    // Skip chat creation for now - just send the message
-    console.log('Message sent successfully, skipping chat update');
-
-    if (chatError) {
-      console.error('Chat upsert error:', chatError);
-    }
+    console.log('Message sent successfully');
 
     res.json({
       success: true,
