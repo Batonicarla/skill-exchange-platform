@@ -126,14 +126,9 @@ skill-exchange-platform/
 
 ## 📚 Documentation
 
-Comprehensive project documentation is available in the [`docs/`](./docs/) folder:
+SRS document :https://docs.google.com/document/d/1d8wNpbt2TGLuB5QIaIyH6oHZKBKLVZJt8QR2CVPv6Vs/edit?usp=sharing
 
-- **[Project Proposal](./docs/PROJECT_PROPOSAL.md)** - Mission, problem statement, and solution approach
-- **[Software Requirements Specification (SRS)](./docs/SRS.md)** - Detailed functional and non-functional requirements
-- **[Architecture Documentation](./docs/ARCHITECTURE.md)** - System design, components, and database schema
-- **[API Reference](./docs/API_REFERENCE.md)** - Complete REST API endpoint documentation
 
-For a quick overview, see the [Documentation Index](./docs/README.md).
 
 ## 🚀 Deployment
 
