@@ -88,7 +88,7 @@ REACT_APP_SUPABASE_ANON_KEY=your_anon_public_key
 npm run dev
 ```
 
-- Frontend: http://localhost:3000
+- Frontend: https://skill-exchange-steel.vercel.app/
 - Backend: http://localhost:5000
 
 ## 📁 Project Structure
