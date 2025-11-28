@@ -29,14 +29,15 @@ const sendMessage = async (req, res) => {
     const chatId = [senderId, receiverId].sort().join('_');
     console.log('Generated chat ID:', chatId);
 
-    // Insert message without chat_id constraint
+    // Insert message
     const { data: messageData, error: messageError } = await supabase
       .from('messages')
       .insert({
         sender_id: senderId,
         receiver_id: receiverId,
         message: message.trim(),
-        read: false
+        read: false,
+        created_at: new Date().toISOString()
       })
       .select()
       .single();
@@ -84,11 +85,11 @@ const getChatHistory = async (req, res) => {
     // Create chat ID
     const chatId = [userId, partnerId].sort().join('_');
 
-    // Get messages
+    // Get messages between the two users
     const { data: messages, error } = await supabase
       .from('messages')
       .select('*')
-      .eq('chat_id', chatId)
+      .or(`and(sender_id.eq.${userId},receiver_id.eq.${partnerId}),and(sender_id.eq.${partnerId},receiver_id.eq.${userId})`)
       .order('created_at', { ascending: true });
 
     if (error) throw error;
@@ -114,19 +115,33 @@ const getUserChats = async (req, res) => {
   try {
     const userId = req.user.uid;
 
-    // Get all chats where user is a participant
-    const { data: chats, error } = await supabase
-      .from('chats')
-      .select('*')
-      .contains('participants', [userId]);
+    // Get all messages where user is sender or receiver
+    const { data: messages, error } = await supabase
+      .from('messages')
+      .select('sender_id, receiver_id, message, created_at')
+      .or(`sender_id.eq.${userId},receiver_id.eq.${userId}`)
+      .order('created_at', { ascending: false });
 
     if (error) throw error;
 
-    const chatList = [];
-
-    for (const chat of chats || []) {
-      const partnerId = chat.participants.find(id => id !== userId);
+    // Group messages by conversation partner
+    const conversations = new Map();
+    
+    for (const msg of messages || []) {
+      const partnerId = msg.sender_id === userId ? msg.receiver_id : msg.sender_id;
       
+      if (!conversations.has(partnerId)) {
+        conversations.set(partnerId, {
+          partnerId,
+          lastMessage: msg.message,
+          lastMessageTime: msg.created_at
+        });
+      }
+    }
+
+    const chatList = [];
+    
+    for (const [partnerId, conversation] of conversations) {
       // Get partner info
       const { data: partnerData } = await supabase
         .from('users')
@@ -135,23 +150,21 @@ const getUserChats = async (req, res) => {
         .single();
 
       chatList.push({
-        chatId: chat.id,
+        chatId: [userId, partnerId].sort().join('_'),
         partner: partnerData ? {
           uid: partnerId,
           displayName: partnerData.display_name,
           photoURL: partnerData.photo_url,
           email: partnerData.email
         } : null,
-        lastMessage: chat.last_message,
-        lastMessageTime: chat.last_message_time,
+        lastMessage: conversation.lastMessage,
+        lastMessageTime: conversation.lastMessageTime,
         unreadCount: 0
       });
     }
 
     // Sort by last message time
     chatList.sort((a, b) => {
-      if (!a.lastMessageTime) return 1;
-      if (!b.lastMessageTime) return -1;
       return new Date(b.lastMessageTime) - new Date(a.lastMessageTime);
     });
 
@@ -183,7 +196,7 @@ const markAsRead = async (req, res) => {
     const { error } = await supabase
       .from('messages')
       .update({ read: true })
-      .eq('chat_id', chatId)
+      .eq('sender_id', partnerId)
       .eq('receiver_id', userId)
       .eq('read', false);
 

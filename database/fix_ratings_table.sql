@@ -1,25 +1,40 @@
--- Fix ratings table to properly link to sessions
--- Drop existing table and recreate with proper structure
+-- Fix ratings table foreign key references
+-- This script ensures the ratings table has proper foreign key constraints
 
-DROP TABLE IF EXISTS ratings;
+-- First, check if the ratings table exists and recreate it with proper constraints
+DROP TABLE IF EXISTS ratings CASCADE;
 
 CREATE TABLE ratings (
-  id SERIAL PRIMARY KEY,
-  session_id INTEGER NOT NULL,
-  rater_id TEXT NOT NULL,
-  rated_user_id TEXT NOT NULL,
-  rating INTEGER NOT NULL CHECK (rating >= 1 AND rating <= 5),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  session_id UUID REFERENCES sessions(id) ON DELETE CASCADE,
+  rater_id UUID REFERENCES users(uid) ON DELETE CASCADE,
+  rated_user_id UUID REFERENCES users(uid) ON DELETE CASCADE,
+  rating INTEGER CHECK (rating >= 1 AND rating <= 5) NOT NULL,
   review TEXT DEFAULT '',
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-  UNIQUE(session_id, rater_id) -- One rating per session per rater
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- Create indexes for faster queries
-CREATE INDEX IF NOT EXISTS idx_ratings_session ON ratings(session_id);
-CREATE INDEX IF NOT EXISTS idx_ratings_rated_user ON ratings(rated_user_id);
-CREATE INDEX IF NOT EXISTS idx_ratings_rater ON ratings(rater_id);
+-- Create indexes for better performance
+CREATE INDEX idx_ratings_session_id ON ratings(session_id);
+CREATE INDEX idx_ratings_rater_id ON ratings(rater_id);
+CREATE INDEX idx_ratings_rated_user_id ON ratings(rated_user_id);
 
--- Add foreign key constraint to sessions table
-ALTER TABLE ratings 
-ADD CONSTRAINT fk_ratings_session 
-FOREIGN KEY (session_id) REFERENCES sessions(id) ON DELETE CASCADE;
+-- Enable RLS
+ALTER TABLE ratings ENABLE ROW LEVEL SECURITY;
+
+-- RLS Policies
+CREATE POLICY "Users can view all ratings" ON ratings FOR SELECT USING (true);
+CREATE POLICY "Users can create ratings for their sessions" ON ratings FOR INSERT 
+  WITH CHECK (
+    auth.uid() = rater_id AND
+    EXISTS (
+      SELECT 1 FROM sessions 
+      WHERE id = session_id 
+      AND (proposer_id = auth.uid() OR partner_id = auth.uid())
+      AND status = 'completed'
+    )
+  );
+
+-- Grant necessary permissions
+GRANT ALL ON ratings TO authenticated;
+GRANT ALL ON ratings TO service_role;

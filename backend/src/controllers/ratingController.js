@@ -84,20 +84,27 @@ const submitRating = async (req, res) => {
     }
 
     // Insert rating
+    console.log('Inserting rating:', { sessionId, raterId, ratedUserId, rating });
+    
     const { data: ratingData, error } = await supabase
       .from('ratings')
       .insert({
         session_id: sessionId,
         rater_id: raterId,
         rated_user_id: ratedUserId,
-        rating: rating,
+        rating: parseInt(rating),
         review: review || '',
         created_at: new Date().toISOString()
       })
       .select()
       .single();
 
-    if (error) throw error;
+    if (error) {
+      console.error('Rating insertion error:', error);
+      throw error;
+    }
+    
+    console.log('Rating inserted successfully:', ratingData);
 
     // Update user's average rating
     const { data: userRatings } = await supabase
@@ -139,17 +146,37 @@ const getUserRatings = async (req, res) => {
   try {
     const { userId } = req.params;
 
-    const { data: ratings, error } = await supabase
+    console.log('Fetching ratings for user:', userId);
+
+    // First try with foreign key references
+    let { data: ratings, error } = await supabase
       .from('ratings')
       .select(`
         *,
-        rater:users!ratings_rater_id_fkey(display_name),
-        session:sessions(skill, session_datetime)
+        rater:users!rater_id(display_name),
+        session:sessions!session_id(skill, session_datetime)
       `)
       .eq('rated_user_id', userId)
       .order('created_at', { ascending: false });
 
-    if (error) throw error;
+    // If foreign key reference fails, try without joins
+    if (error) {
+      console.log('Foreign key join failed, trying simple query:', error);
+      const { data: simpleRatings, error: simpleError } = await supabase
+        .from('ratings')
+        .select('*')
+        .eq('rated_user_id', userId)
+        .order('created_at', { ascending: false });
+      
+      if (simpleError) {
+        console.error('Simple query also failed:', simpleError);
+        throw simpleError;
+      }
+      
+      ratings = simpleRatings;
+    }
+
+    console.log('Successfully fetched ratings:', ratings?.length || 0);
 
     res.json({
       success: true,
@@ -160,7 +187,8 @@ const getUserRatings = async (req, res) => {
     console.error('Get user ratings error:', error);
     res.status(500).json({
       success: false,
-      message: 'Error fetching ratings'
+      message: 'Error fetching ratings',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
     });
   }
 };

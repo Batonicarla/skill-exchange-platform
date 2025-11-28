@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import api from '../services/api';
 
-const SimpleRatingModal = ({ partner, onClose, onSubmit }) => {
+const SimpleRatingModal = ({ partner, sessionId, onClose, onSubmit }) => {
   const [rating, setRating] = useState(5);
   const [comment, setComment] = useState('');
   const [loading, setLoading] = useState(false);
@@ -11,10 +11,11 @@ const SimpleRatingModal = ({ partner, onClose, onSubmit }) => {
     setLoading(true);
 
     try {
-      const response = await api.post('/ratings', {
+      const response = await api.post('/ratings/submit', {
+        sessionId: sessionId,
         ratedUserId: partner.uid,
         rating: rating,
-        comment: comment.trim()
+        review: comment.trim()
       });
 
       if (response.data.success) {
@@ -57,7 +58,7 @@ const SimpleRatingModal = ({ partner, onClose, onSubmit }) => {
             <label style={{ display: 'block', marginBottom: '8px', color: 'var(--color-text)' }}>
               Rating (1-5 stars)
             </label>
-            <div style={{ display: 'flex', gap: '4px' }}>
+            <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
               {[1, 2, 3, 4, 5].map((star) => (
                 <button
                   key={star}
@@ -68,12 +69,16 @@ const SimpleRatingModal = ({ partner, onClose, onSubmit }) => {
                     border: 'none',
                     fontSize: '24px',
                     cursor: 'pointer',
-                    color: star <= rating ? '#fbbf24' : '#d1d5db'
+                    color: star <= rating ? '#fbbf24' : '#d1d5db',
+                    transition: 'color 0.2s'
                   }}
                 >
-                  ⭐
+                  ★
                 </button>
               ))}
+              <span style={{ marginLeft: '8px', color: 'var(--color-text)', fontSize: '14px' }}>
+                {rating}/5
+              </span>
             </div>
           </div>
           

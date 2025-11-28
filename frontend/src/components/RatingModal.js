@@ -72,17 +72,15 @@ const RatingModal = ({ session, onClose, onSubmit }) => {
                   onClick={(e) => {
                     e.preventDefault();
                     e.stopPropagation();
-                    console.log('Star clicked:', star);
                     setRating(star);
                   }}
-                  onMouseEnter={() => console.log('Star hover:', star)}
                 >
                   ★
                 </button>
               ))}
             </div>
-            <p style={{fontSize: '12px', color: 'var(--color-text-muted)', marginTop: '8px'}}>
-              Current rating: {rating}/5
+            <p style={{fontSize: '14px', color: 'var(--color-text)', marginTop: '8px', fontWeight: 'bold'}}>
+              Rating: {rating}/5 {rating === 0 ? '(Please select)' : ''}
             </p>
           </div>
 

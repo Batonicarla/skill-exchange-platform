@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate, useLocation, Link } from 'react-router-dom';
 import api from '../services/api';
-import RatingModal from '../components/RatingModal';
+
 import './Sessions.css';
 
 const Sessions = () => {
@@ -20,9 +20,7 @@ const Sessions = () => {
   });
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
-  const [showRatingModal, setShowRatingModal] = useState(false);
-  const [selectedSession, setSelectedSession] = useState(null);
-  const [ratingEligibility, setRatingEligibility] = useState({});
+
 
   const fetchSessions = useCallback(async () => {
     try {
@@ -30,21 +28,7 @@ const Sessions = () => {
       if (response.data.success) {
         setSessions(response.data.data);
         
-        // Check rating eligibility for completed sessions
-        const completedSessions = response.data.data.filter(s => s.status === 'completed');
-        const eligibilityChecks = {};
-        
-        for (const session of completedSessions) {
-          try {
-            const ratingResponse = await api.get(`/sessions/${session.sessionId}/can-rate`);
-            eligibilityChecks[session.sessionId] = ratingResponse.data;
-          } catch (error) {
-            console.error(`Error checking rating eligibility for session ${session.sessionId}:`, error);
-            eligibilityChecks[session.sessionId] = { canRate: false };
-          }
-        }
-        
-        setRatingEligibility(eligibilityChecks);
+
       }
     } catch (error) {
       console.error('Error fetching sessions:', error);
@@ -60,22 +44,7 @@ const Sessions = () => {
       if (response.data.success) {
         setSessionDetails(response.data.data);
         
-        // Check rating eligibility if session is completed
-        if (response.data.data.status === 'completed') {
-          try {
-            const ratingResponse = await api.get(`/sessions/${sessionId}/can-rate`);
-            setRatingEligibility(prev => ({
-              ...prev,
-              [sessionId]: ratingResponse.data
-            }));
-          } catch (error) {
-            console.error('Error checking rating eligibility:', error);
-            setRatingEligibility(prev => ({
-              ...prev,
-              [sessionId]: { canRate: false }
-            }));
-          }
-        }
+
       }
     } catch (error) {
       console.error('Error fetching session details:', error);
@@ -356,6 +325,20 @@ const Sessions = () => {
                 </div>
               )}
               
+              {sessionDetails.status === 'confirmed' && sessionDetails.role === 'partner' && (
+                <div className="action-group">
+                  <h4>✅ Session Accepted!</h4>
+                  <p>You have accepted this session request. You can now chat with your learning partner.</p>
+                </div>
+              )}
+              
+              {sessionDetails.status === 'rejected' && sessionDetails.role === 'partner' && (
+                <div className="action-group" style={{ borderColor: '#fee2e2', background: '#fef2f2' }}>
+                  <h4>❌ Session Declined</h4>
+                  <p>You have declined this session request.</p>
+                </div>
+              )}
+              
               {sessionDetails.status === 'pending' && sessionDetails.role === 'proposer' && (
                 <div className="action-group">
                   <h4>⏳ Waiting for Response</h4>
@@ -393,25 +376,7 @@ const Sessions = () => {
               {sessionDetails.status === 'completed' && (
                 <div className="action-group">
                   <h4>✅ Session Completed!</h4>
-                  <p>Great job! You can now rate your learning partner to help build trust in the community.</p>
-                  {ratingEligibility[sessionId]?.canRate ? (
-                    <button
-                      onClick={() => {
-                        setSelectedSession({
-                          sessionId: sessionDetails.sessionId || sessionId,
-                          partnerId: sessionDetails.role === 'proposer' ? sessionDetails.partnerId : sessionDetails.proposerId
-                        });
-                        setShowRatingModal(true);
-                      }}
-                      className="btn btn-accent"
-                    >
-                      ⭐ Rate Your Partner
-                    </button>
-                  ) : (
-                    <div className="rating-completed">
-                      <span className="rating-status">✅ You have already rated this session</span>
-                    </div>
-                  )}
+                  <p>Great job! This learning session has been completed successfully.</p>
                 </div>
               )}
 
@@ -623,26 +588,7 @@ const Sessions = () => {
                       </Link>
                     )}
                     
-                    {session.status === 'completed' && ratingEligibility[session.sessionId]?.canRate && (
-                      <button
-                        onClick={() => {
-                          setSelectedSession({
-                            sessionId: session.sessionId,
-                            partnerId: session.role === 'proposer' ? session.partnerId : session.proposerId
-                          });
-                          setShowRatingModal(true);
-                        }}
-                        className="btn btn-accent"
-                      >
-                        ⭐ Rate Partner
-                      </button>
-                    )}
-                    
-                    {session.status === 'completed' && !ratingEligibility[session.sessionId]?.canRate && (
-                      <span className="rating-status">
-                        ✅ Already Rated
-                      </span>
-                    )}
+
                     
                     {session.status === 'pending' && session.role === 'partner' && (
                       <button
@@ -653,6 +599,18 @@ const Sessions = () => {
                       </button>
                     )}
                     
+                    {session.status === 'confirmed' && (
+                      <span className="status-badge confirmed">
+                        ✅ Confirmed
+                      </span>
+                    )}
+                    
+                    {session.status === 'rejected' && (
+                      <span className="status-badge rejected">
+                        ❌ Declined
+                      </span>
+                    )}
+                    
 
                   </div>
                 </div>
@@ -661,22 +619,7 @@ const Sessions = () => {
           </div>
         )}
         
-        {showRatingModal && selectedSession && (
-          <RatingModal
-            session={selectedSession}
-            onClose={() => {
-              setShowRatingModal(false);
-              setSelectedSession(null);
-            }}
-            onSubmit={() => {
-              setMessage('Rating submitted successfully!');
-              fetchSessions(); // This will refresh rating eligibility
-              if (sessionId) {
-                fetchSessionDetails(); // Refresh session details and rating eligibility
-              }
-            }}
-          />
-        )}
+
       </div>
     </div>
   );
