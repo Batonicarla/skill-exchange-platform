@@ -241,8 +241,10 @@ This project is licensed under the ISC License.
 
 ## 👥 Support
 
-For support, email support@skillexchange.com or create an issue on GitHub.
 
 ---
 
-Built with ❤️ using React, Node.js, and Supabase
+Built with  using React, Node.js, and Supabase
+
+
+demo video link:https://youtu.be/ragCeyDNJ8I
